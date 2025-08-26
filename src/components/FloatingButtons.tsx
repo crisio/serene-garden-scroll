@@ -12,8 +12,8 @@ export const FloatingButtons = () => {
     window.open("https://wa.me/50422345678?text=Hola, necesito información sobre sus servicios", "_blank");
   };
 
- return (
-  <div className="fixed right-4 bottom-4 z-50 flex flex-col space-y-3">
+  return (
+    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-3">
     {/* Botón de WhatsApp */}
     <Button
       onClick={handleWhatsApp}
