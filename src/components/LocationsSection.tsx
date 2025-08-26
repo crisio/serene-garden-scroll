@@ -11,7 +11,7 @@ interface Location {
 }
 
 export const LocationsSection = () => {
-  const locations: Location[] = [
+  const sanPedroSulaLocations: Location[] = [
     {
       id: "jardines-sps",
       name: "Jardines del Recuerdo / Cremaciones del Recuerdo",
@@ -32,7 +32,10 @@ export const LocationsSection = () => {
       address: "Barrio El Benque, 11 Avenida, 4ta Calle SO, San Pedro Sula, Honduras",
       phones: ["2553-6405"],
       city: "San Pedro Sula"
-    },
+    }
+  ];
+
+  const ceibaLocations: Location[] = [
     {
       id: "jardines-ceiba",
       name: "Jardines de Paz Ceibeños (Parque Memorial)",
@@ -64,43 +67,86 @@ export const LocationsSection = () => {
             </p>
           </div>
 
-          <div className="grid gap-6 slide-up">
-            {locations.map((location, index) => (
-              <Card
-                key={location.id}
-                className="hover:shadow-lg transition-all duration-300"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-primary-green/20 rounded-full flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-6 h-6 text-primary-green" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-foreground">
-                          {location.name}
-                        </h3>
-                        <span className="text-sm bg-primary-gold/20 text-primary-gold px-2 py-1 rounded-full">
-                          {location.city}
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
-                        {location.address}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {location.phones.map((phone, idx) => (
-                          <div key={idx} className="flex items-center gap-1 text-sm text-primary-green">
-                            <Phone className="w-3 h-3" />
-                            <span>{phone}</span>
+          <div className="grid lg:grid-cols-2 gap-12">
+            {/* San Pedro Sula */}
+            <div className="slide-up">
+              <h3 className="text-2xl font-bold text-foreground mb-6 text-center">
+                San Pedro Sula
+              </h3>
+              <div className="space-y-6">
+                {sanPedroSulaLocations.map((location, index) => (
+                  <Card
+                    key={location.id}
+                    className="hover:shadow-lg transition-all duration-300"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-primary-green/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-6 h-6 text-primary-green" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-foreground mb-2">
+                            {location.name}
+                          </h4>
+                          <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
+                            {location.address}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {location.phones.map((phone, idx) => (
+                              <div key={idx} className="flex items-center gap-1 text-sm text-primary-green">
+                                <Phone className="w-3 h-3" />
+                                <span>{phone}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* La Ceiba */}
+            <div className="slide-up">
+              <h3 className="text-2xl font-bold text-foreground mb-6 text-center">
+                La Ceiba
+              </h3>
+              <div className="space-y-6">
+                {ceibaLocations.map((location, index) => (
+                  <Card
+                    key={location.id}
+                    className="hover:shadow-lg transition-all duration-300"
+                    style={{ animationDelay: `${(index + 3) * 0.1}s` }}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-primary-green/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-6 h-6 text-primary-green" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-foreground mb-2">
+                            {location.name}
+                          </h4>
+                          <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
+                            {location.address}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {location.phones.map((phone, idx) => (
+                              <div key={idx} className="flex items-center gap-1 text-sm text-primary-green">
+                                <Phone className="w-3 h-3" />
+                                <span>{phone}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Call to Action */}
