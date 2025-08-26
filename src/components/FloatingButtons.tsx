@@ -13,7 +13,7 @@ export const FloatingButtons = () => {
   };
 
   return (
-    <div className="fixed right-2 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-12">
+    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center space-y-12">
       {/* Botón de WhatsApp */}
       <div className="relative">
         <Button
@@ -21,7 +21,7 @@ export const FloatingButtons = () => {
           className="bg-[#25D366] hover:bg-[#25D366] text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center group opacity-60 hover:opacity-100 absolute right-0 hover:w-auto hover:px-4 p-0"
           size="sm"
         >
-          <MessageCircle size={16} fill="currentColor" className="flex-shrink-0 ml-0.5" />
+          <MessageCircle size={16} fill="currentColor" className="flex-shrink-0 ml-1" />
           <span className="font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden w-0 group-hover:w-auto group-hover:ml-2 text-sm">CONTACTANOS</span>
         </Button>
       </div>
@@ -33,7 +33,7 @@ export const FloatingButtons = () => {
           className="bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-full w-10 h-10 flex items-center justify-center group opacity-60 hover:opacity-100 absolute right-0 hover:w-auto hover:px-4 p-0"
           size="sm"
         >
-          <Phone size={16} className="flex-shrink-0 ml-0.5" />
+          <Phone size={16} className="flex-shrink-0 ml-1" />
           <span className="font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden w-0 group-hover:w-auto group-hover:ml-2 text-sm">NECESIDAD INMEDIATA</span>
         </Button>
       </div>
