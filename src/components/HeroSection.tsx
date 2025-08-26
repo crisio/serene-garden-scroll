@@ -37,9 +37,8 @@ export const HeroSection = () => {
               Nuestros Servicios
             </Button>
             <Button 
-              variant="outline" 
               size="lg" 
-              className="border-2 border-white text-white hover:bg-white hover:text-primary-green font-semibold px-8 py-4 text-lg smooth-transition"
+              className="bg-primary-green hover:bg-primary-green/90 text-white font-semibold px-8 py-4 text-lg smooth-transition"
               onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
             >
               Contáctanos
