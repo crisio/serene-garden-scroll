@@ -6,32 +6,26 @@ export const GroupSection = () => {
     {
       name: "Jardines del Recuerdo",
       description: "Cementerio principal con más de 50 años de historia",
-      location: "Tegucigalpa"
     },
     {
       name: "Funerales del Recuerdo",
       description: "Servicios funerarios completos y personalizados",
-      location: "Tegucigalpa"
     },
     {
       name: "Cremaciones del Recuerdo",
       description: "Servicios de cremación con dignidad y respeto",
-      location: "Tegucigalpa"
     },
     {
       name: "Funerales La Paz",
       description: "Servicios funerarios en la zona norte del país",
-      location: "San Pedro Sula"
     },
     {
       name: "Jardines de Paz Génesis",
       description: "Nuevo cementerio con instalaciones modernas",
-      location: "Comayagua"
     },
     {
       name: "Funerales San José",
       description: "Servicios funerarios en la zona central",
-      location: "La Paz"
     }
   ];
 
@@ -121,10 +115,6 @@ export const GroupSection = () => {
                   <p className="text-white/80 mb-4 leading-relaxed">
                     {company.description}
                   </p>
-                  <div className="flex items-center gap-2 text-primary-gold">
-                    <MapPin size={16} />
-                    <span className="text-sm font-medium">{company.location}</span>
-                  </div>
                 </CardContent>
               </Card>
             ))}
