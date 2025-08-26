@@ -13,7 +13,7 @@ export const FloatingButtons = () => {
   };
 
   return (
-    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-6">
+    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-12">
       {/* Botón de WhatsApp */}
       <div className="relative">
         <Button
