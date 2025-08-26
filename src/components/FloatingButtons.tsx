@@ -12,20 +12,16 @@ export const FloatingButtons = () => {
     window.open("https://wa.me/50422345678?text=Hola, necesito información sobre sus servicios", "_blank");
   };
 
-  return (
-    <div className="fixed right-4 bottom-4 z-50 flex flex-col space-y-3">
-      {/* Botón de WhatsApp */}
-      <Button
-        onClick={handleWhatsApp}
-        className="bg-[#25D366] hover:bg-[#128C7E] text-white shadow-xl hover:shadow-2xl smooth-transition rounded-full w-14 h-14 p-0 relative group"
-        size="icon"
-      >
-        <MessageCircle size={28} fill="currentColor" />
-        <div className="absolute -left-40 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm opacity-0 group-hover:opacity-100 smooth-transition pointer-events-none whitespace-nowrap">
-          Chat por WhatsApp
-          <div className="absolute right-[-4px] top-1/2 -translate-y-1/2 w-0 h-0 border-l-4 border-l-gray-800 border-y-4 border-y-transparent"></div>
-        </div>
-      </Button>
+ <div className="fixed right-4 bottom-4 z-50 flex flex-col space-y-3">
+  {/* Botón de WhatsApp */}
+  <Button
+    onClick={handleWhatsApp}
+    className="bg-[#25D366] hover:bg-[#128C7E] text-white shadow-xl hover:shadow-2xl smooth-transition rounded-full px-4 py-2 flex items-center space-x-2"
+  >
+    <MessageCircle size={24} fill="currentColor" />
+    <span className="font-semibold">WhatsApp</span>
+  </Button>
+
 
       {/* Botón de Necesidad Inmediata */}
       <Button
