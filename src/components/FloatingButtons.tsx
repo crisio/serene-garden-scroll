@@ -17,7 +17,7 @@ export const FloatingButtons = () => {
       {/* Botón de WhatsApp */}
       <Button
         onClick={handleWhatsApp}
-        className="bg-[#25D366] hover:bg-[#25D366] text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-full p-3 flex items-center space-x-2 justify-center animate-pulse group hover:px-6"
+        className="bg-[#25D366] hover:bg-[#25D366] text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-full p-3 flex items-center space-x-2 justify-center group hover:px-6"
         size="lg"
       >
         <MessageCircle size={24} fill="currentColor" />
@@ -27,7 +27,7 @@ export const FloatingButtons = () => {
       {/* Botón de Necesidad Inmediata */}
       <Button
         onClick={handleEmergencyCall}
-        className="bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-full p-3 flex items-center space-x-2 justify-center animate-pulse group hover:px-6"
+        className="bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-full p-3 flex items-center space-x-2 justify-center group hover:px-6"
         size="lg"
       >
         <Phone size={20} />
