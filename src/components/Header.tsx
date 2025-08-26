@@ -24,6 +24,7 @@ export const Header = () => {
 
   const navItems = [
     { label: "INICIO", id: "hero" },
+    { label: "UBICACIONES", id: "locations" },
     { label: "NOSOTROS", id: "about" },
     { label: "SERVICIOS", id: "services" },
     { label: "GRUPO INCOSA", id: "group" },
