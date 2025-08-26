@@ -123,9 +123,8 @@ export const ServicesSection = () => {
                 Llamar Ahora: (504) 2234-5678
               </Button>
               <Button 
-                variant="outline" 
                 size="lg"
-                className="border-primary-green text-primary-green hover:bg-primary-green hover:text-white px-8 py-4 text-lg"
+                className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
                 onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
               >
                 Contactar Online
