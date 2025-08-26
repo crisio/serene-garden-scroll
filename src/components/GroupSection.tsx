@@ -2,32 +2,6 @@ import { Building, Users, Award, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const GroupSection = () => {
-  const companies = [
-    {
-      name: "Jardines del Recuerdo",
-      description: "Cementerio principal con más de 50 años de historia",
-    },
-    {
-      name: "Funerales del Recuerdo",
-      description: "Servicios funerarios completos y personalizados",
-    },
-    {
-      name: "Cremaciones del Recuerdo",
-      description: "Servicios de cremación con dignidad y respeto",
-    },
-    {
-      name: "Funerales La Paz",
-      description: "Servicios funerarios en la zona norte del país",
-    },
-    {
-      name: "Jardines de Paz Génesis",
-      description: "Nuevo cementerio con instalaciones modernas",
-    },
-    {
-      name: "Funerales San José",
-      description: "Servicios funerarios en la zona central",
-    }
-  ];
 
   const stats = [
     {
@@ -100,25 +74,6 @@ export const GroupSection = () => {
             })}
           </div>
 
-          {/* Companies Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {companies.map((company, index) => (
-              <Card 
-                key={index}
-                className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 smooth-transition fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-3">
-                    {company.name}
-                  </h3>
-                  <p className="text-white/80 mb-4 leading-relaxed">
-                    {company.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
 
           {/* Mission Statement */}
           <div className="mt-16 text-center bg-white/5 backdrop-blur-sm rounded-2xl p-12 slide-up">
