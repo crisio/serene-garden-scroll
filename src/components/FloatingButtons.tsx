@@ -17,7 +17,7 @@ export const FloatingButtons = () => {
     {/* Botón de WhatsApp */}
     <Button
       onClick={handleWhatsApp}
-      className="bg-[#25D366] hover:bg-[#128C7E] text-white shadow-xl hover:shadow-2xl smooth-transition rounded-full px-6 py-3 flex items-center space-x-2 min-w-[200px] justify-center"
+      className="bg-[#25D366] hover:bg-[#25D366] text-white shadow-xl hover:shadow-2xl smooth-transition rounded-full px-6 py-3 flex items-center space-x-2 min-w-[200px] justify-center"
       size="lg"
     >
       <MessageCircle size={24} fill="currentColor" />
