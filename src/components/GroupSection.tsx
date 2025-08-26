@@ -63,16 +63,16 @@ export const GroupSection = () => {
   ];
 
   return (
-    <section id="group" className="py-20 bg-background">
+    <section id="group" className="py-20 bg-elegant-gray text-white">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-16 slide-up">
-            <h2 className="text-4xl md:text-5xl font-bold text-elegant-gray mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Somos Grupo INCOSA
             </h2>
-            <div className="w-24 h-1 bg-primary-green mx-auto mb-8"></div>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <div className="w-24 h-1 bg-primary-gold mx-auto mb-8"></div>
+            <p className="text-xl text-white/80 max-w-3xl mx-auto leading-relaxed">
               Un grupo empresarial hondureño líder en servicios funerarios, 
               cementerios y cremaciones, con presencia nacional y compromiso 
               con la excelencia.
@@ -89,16 +89,16 @@ export const GroupSection = () => {
                   className="text-center fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <div className="w-16 h-16 bg-primary-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <IconComponent className="w-8 h-8 text-primary-green" />
+                  <div className="w-16 h-16 bg-primary-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <IconComponent className="w-8 h-8 text-primary-gold" />
                   </div>
-                  <div className="text-4xl font-bold text-primary-green mb-2">
+                  <div className="text-4xl font-bold text-primary-gold mb-2">
                     {stat.number}
                   </div>
-                  <div className="text-lg font-semibold text-elegant-gray mb-1">
+                  <div className="text-lg font-semibold mb-1">
                     {stat.label}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-white/70">
                     {stat.description}
                   </div>
                 </div>
@@ -111,17 +111,17 @@ export const GroupSection = () => {
             {companies.map((company, index) => (
               <Card 
                 key={index}
-                className="bg-card border-border hover:bg-accent/10 smooth-transition fade-in card-shadow"
+                className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 smooth-transition fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-elegant-gray mb-3">
+                  <h3 className="text-xl font-bold text-white mb-3">
                     {company.name}
                   </h3>
-                  <p className="text-muted-foreground mb-4 leading-relaxed">
+                  <p className="text-white/80 mb-4 leading-relaxed">
                     {company.description}
                   </p>
-                  <div className="flex items-center gap-2 text-primary-green">
+                  <div className="flex items-center gap-2 text-primary-gold">
                     <MapPin size={16} />
                     <span className="text-sm font-medium">{company.location}</span>
                   </div>
@@ -131,9 +131,9 @@ export const GroupSection = () => {
           </div>
 
           {/* Mission Statement */}
-          <div className="mt-16 text-center bg-primary-green/5 rounded-2xl p-12 slide-up">
-            <h3 className="text-3xl font-bold text-elegant-gray mb-6">Nuestra Misión</h3>
-            <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+          <div className="mt-16 text-center bg-white/5 backdrop-blur-sm rounded-2xl p-12 slide-up">
+            <h3 className="text-3xl font-bold mb-6">Nuestra Misión</h3>
+            <p className="text-xl text-white/90 max-w-4xl mx-auto leading-relaxed">
               Brindar servicios funerarios, de cementerio y cremación de la más alta calidad, 
               acompañando a las familias hondureñas en sus momentos más difíciles con 
               compasión, dignidad y profesionalismo, honrando la memoria de sus seres queridos 

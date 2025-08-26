@@ -45,18 +45,18 @@ export const ServicesSection = () => {
       id="services" 
       className="py-20 parallax-section relative"
       style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${cemeteryGarden})`
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url(${cemeteryGarden})`
       }}
     >
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-16 slide-up">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-elegant-gray mb-6">
               Nuestros Servicios
             </h2>
-            <div className="w-24 h-1 bg-primary-gold mx-auto mb-8"></div>
-            <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+            <div className="w-24 h-1 bg-primary-green mx-auto mb-8"></div>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Ofrecemos una gama completa de servicios funerarios diseñados 
               para honrar la memoria de sus seres queridos con dignidad y respeto.
             </p>
@@ -69,7 +69,7 @@ export const ServicesSection = () => {
               return (
                 <Card 
                   key={index}
-                  className="group hover:scale-105 smooth-transition card-shadow fade-in bg-white/10 backdrop-blur-sm border-white/20"
+                  className="group hover:scale-105 smooth-transition card-shadow fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <CardContent className="p-8 text-center">
@@ -77,11 +77,11 @@ export const ServicesSection = () => {
                       <IconComponent className="w-10 h-10 text-primary-green" />
                     </div>
                     
-                    <h3 className="text-2xl font-bold text-white mb-4">
+                    <h3 className="text-2xl font-bold text-elegant-gray mb-4">
                       {service.title}
                     </h3>
                     
-                    <p className="text-white/80 mb-6 leading-relaxed">
+                    <p className="text-muted-foreground mb-6 leading-relaxed">
                       {service.description}
                     </p>
                     
@@ -89,14 +89,14 @@ export const ServicesSection = () => {
                       {service.features.map((feature, featureIndex) => (
                         <li key={featureIndex} className="flex items-center gap-3">
                           <div className="w-2 h-2 bg-primary-green rounded-full"></div>
-                          <span className="text-sm text-white/70">{feature}</span>
+                          <span className="text-sm text-muted-foreground">{feature}</span>
                         </li>
                       ))}
                     </ul>
                     
                     <Button 
                       variant="outline" 
-                      className="border-primary-gold text-primary-gold hover:bg-primary-gold hover:text-white w-full smooth-transition"
+                      className="border-primary-green text-primary-green hover:bg-primary-green hover:text-white w-full smooth-transition"
                     >
                       Más Información
                     </Button>
@@ -107,25 +107,25 @@ export const ServicesSection = () => {
           </div>
 
           {/* CTA Section */}
-          <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-12 slide-up">
-            <h3 className="text-3xl font-bold text-white mb-4">
+          <div className="text-center bg-primary-green/5 rounded-2xl p-12 slide-up">
+            <h3 className="text-3xl font-bold text-elegant-gray mb-4">
               ¿Necesita Nuestros Servicios?
             </h3>
-            <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Estamos disponibles las 24 horas del día, los 7 días de la semana 
               para atender sus necesidades con la atención que usted merece.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 size="lg"
-                className="bg-primary-gold hover:bg-primary-gold/90 text-white px-8 py-4 text-lg"
+                className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
               >
                 Llamar Ahora: (504) 2234-5678
               </Button>
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-white text-white hover:bg-white hover:text-primary-green px-8 py-4 text-lg"
+                className="border-primary-green text-primary-green hover:bg-primary-green hover:text-white px-8 py-4 text-lg"
                 onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
               >
                 Contactar Online
