@@ -2,6 +2,7 @@ import { Flower, Building2, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import cemeteryGarden from "@/assets/cemetery-garden.jpg";
+import { scrollToSection } from "@/lib/scrollUtils";
 
 export const ServicesSection = () => {
   const services = [
@@ -10,10 +11,11 @@ export const ServicesSection = () => {
       title: "Cementerios",
       description: "Espacios de paz y tranquilidad para el descanso eterno",
       features: [
-        "Lotes familiares",
-        "Mausoleos privados", 
-        "Jardines memoriales",
-        "Mantenimiento perpetuo"
+        "Arrendamiento a perpetuidad (lotes y mausoleos)",
+        "Mantenimiento de grama fina",
+        "Lápidas personalizadas",
+        "Ampliaciones de espacios",
+        "Bajadas y reducciones de restos"
       ]
     },
     {
@@ -21,8 +23,8 @@ export const ServicesSection = () => {
       title: "Cremaciones",
       description: "Servicios de cremación con dignidad y respeto",
       features: [
-        "Cremación tradicional",
-        "Servicios memoriales",
+        "Servicio de cremación completo",
+        "Nichos cinerarios",
         "Urnas especiales",
         "Ceremonias personalizadas"
       ]
@@ -32,10 +34,11 @@ export const ServicesSection = () => {
       title: "Servicios Funerarios",
       description: "Acompañamiento completo en momentos difíciles",
       features: [
-        "Velatorios privados",
-        "Transporte especializado",
-        "Gestión de documentos",
-        "Atención 24 horas"
+        "Salas de velación equipadas",
+        "Traslados nacionales",
+        "Repatriaciones internacionales",
+        "Gestión completa de documentos",
+        "Atención 24 horas / 7 días"
       ]
     }
   ];
@@ -122,10 +125,10 @@ export const ServicesSection = () => {
               >
                 Llamar Ahora: (504) 2234-5678
               </Button>
-              <Button 
+              <Button
                 size="lg"
                 className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
-                onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => scrollToSection("contact")}
               >
                 Contactar Online
               </Button>

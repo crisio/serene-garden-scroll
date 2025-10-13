@@ -1,6 +1,7 @@
 import { MapPin, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { scrollToSection } from "@/lib/scrollUtils";
 
 interface Location {
   id: string;
@@ -14,9 +15,16 @@ export const LocationsSection = () => {
   const sanPedroSulaLocations: Location[] = [
     {
       id: "jardines-sps",
-      name: "Jardines del Recuerdo / Cremaciones del Recuerdo",
+      name: "Parque Memorial Jardines del Recuerdo",
       address: "Colonia Altiplano, 25 Calle SO, San Pedro Sula, Honduras",
       phones: ["2556-7400", "2556-7220", "2556-9039"],
+      city: "San Pedro Sula"
+    },
+    {
+      id: "cremaciones-sps",
+      name: "Cremaciones del Recuerdo",
+      address: "Colonia Altiplano, 25 Calle SO, San Pedro Sula, Honduras",
+      phones: ["2556-7400", "2556-7220"],
       city: "San Pedro Sula"
     },
     {
@@ -24,13 +32,6 @@ export const LocationsSection = () => {
       name: "Funerales del Recuerdo",
       address: "Barrio El Benque, 11 Avenida, 4ta Calle SO, San Pedro Sula, Honduras",
       phones: ["2553-6405", "2553-6406", "2553-6407"],
-      city: "San Pedro Sula"
-    },
-    {
-      id: "funerales-paz-sps",
-      name: "Funerales La Paz",
-      address: "Barrio El Benque, 11 Avenida, 4ta Calle SO, San Pedro Sula, Honduras",
-      phones: ["2553-6405"],
       city: "San Pedro Sula"
     }
   ];
@@ -149,8 +150,27 @@ export const LocationsSection = () => {
             </div>
           </div>
 
+          {/* Contactos de Grama */}
+          <div className="text-center mt-12 slide-up">
+            <Card className="bg-gradient-to-r from-primary-green/10 to-primary-green/5">
+              <CardContent className="p-6">
+                <h4 className="text-lg font-semibold text-foreground mb-4">
+                  Contactos Responsables de Mantenimiento de Grama
+                </h4>
+                <div className="flex flex-wrap justify-center gap-4">
+                  {["9989-5025", "9520-6769", "9309-9916", "9513-3286"].map((phone) => (
+                    <div key={phone} className="flex items-center gap-2 text-primary-green bg-white px-4 py-2 rounded-lg shadow-sm">
+                      <Phone className="w-4 h-4" />
+                      <span className="font-medium">{phone}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Call to Action */}
-          <div className="text-center mt-16 slide-up">
+          <div className="text-center mt-8 slide-up">
             <Card className="bg-primary-green">
               <CardContent className="p-8">
                 <h3 className="text-2xl font-bold text-white mb-4">
@@ -159,10 +179,10 @@ export const LocationsSection = () => {
                 <p className="text-white/90 mb-6 text-lg">
                   Nuestro equipo está disponible 24/7 para atenderle
                 </p>
-                <Button 
+                <Button
                   size="lg"
                   className="bg-white text-primary-green hover:bg-white/90 font-semibold px-8 py-4"
-                  onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
+                  onClick={() => scrollToSection("contact")}
                 >
                   Contactar Ahora
                 </Button>

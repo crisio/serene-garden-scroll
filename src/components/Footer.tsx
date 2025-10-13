@@ -1,13 +1,16 @@
 import { Heart, Phone, Mail, MapPin } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { scrollToSection as scrollToSectionUtil } from "@/lib/scrollUtils";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const quickLinks = [
     { label: "Inicio", href: "#hero" },
+    { label: "Ubicaciones", href: "#locations" },
     { label: "Nosotros", href: "#about" },
     { label: "Servicios", href: "#services" },
+    { label: "Otras Gestiones", href: "#otras-gestiones" },
     { label: "Grupo INCOSA", href: "#group" },
     { label: "Contacto", href: "#contact" }
   ];
@@ -20,9 +23,8 @@ export const Footer = () => {
     "Gestión de Documentos"
   ];
 
-  const scrollToSection = (href: string) => {
-    const element = document.getElementById(href.replace('#', ''));
-    element?.scrollIntoView({ behavior: "smooth" });
+  const handleScrollToSection = (href: string) => {
+    scrollToSectionUtil(href.replace('#', ''));
   };
 
   return (
@@ -44,10 +46,16 @@ export const Footer = () => {
             </div>
             
             <p className="text-white/80 mb-6 leading-relaxed">
-              Con más de 50 años de experiencia, somos el grupo funerario líder en Honduras, 
-              comprometidos con brindar servicios de la más alta calidad y acompañar a las 
-              familias hondureñas en sus momentos más importantes.
+              Con más de 50 años de trayectoria, hemos acompañado a las familias hondureñas
+              con respeto, calidad y ética en los momentos más significativos. Nos distinguimos
+              por la excelencia, innovación y confianza en cada servicio que brindamos.
             </p>
+
+            <div className="bg-primary-gold/20 rounded-lg p-3 mb-6 inline-block">
+              <p className="text-white font-semibold text-sm">
+                🕐 Atención 24 horas / 7 días a la semana
+              </p>
+            </div>
             
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -72,7 +80,7 @@ export const Footer = () => {
               {quickLinks.map((link, index) => (
                 <li key={index}>
                   <button
-                    onClick={() => scrollToSection(link.href)}
+                    onClick={() => handleScrollToSection(link.href)}
                     className="text-white/80 hover:text-primary-gold smooth-transition text-left"
                   >
                     {link.label}
@@ -111,7 +119,7 @@ export const Footer = () => {
           
           <div className="mt-4 text-center">
             <p className="text-white/60 text-xs">
-              Atención las 24 horas del día, los 7 días de la semana • Servicios de emergencia disponibles
+              Atención 24/7 • Servicios de emergencia disponibles • Cobertura nacional en Honduras
             </p>
           </div>
         </div>

@@ -36,9 +36,10 @@ export const AboutSection = () => {
             </h2>
             <div className="w-24 h-1 bg-primary-green mx-auto mb-8"></div>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Desde 1970, hemos sido el refugio de confianza para las familias hondureñas, 
-              ofreciendo servicios funerarios con la dignidad, respeto y profesionalismo 
-              que cada momento requiere.
+              Con más de 50 años de trayectoria, hemos acompañado a las familias hondureñas
+              con respeto, calidad y ética en los momentos más significativos. Hoy reafirmamos
+              nuestro compromiso de ser la mejor opción en servicios funerarios, distinguiéndonos
+              por la excelencia, innovación y confianza.
             </p>
           </div>
 
@@ -69,19 +70,19 @@ export const AboutSection = () => {
           </div>
 
           {/* Story Content */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
             <div className="slide-up">
               <h3 className="text-3xl font-bold text-elegant-gray mb-6">
                 Un Legado de Servicio
               </h3>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                Lo que comenzó como un pequeño negocio familiar se ha convertido en 
-                el grupo funerario más confiable de Honduras. Nuestra misión siempre 
+                Lo que comenzó como un pequeño negocio familiar se ha convertido en
+                el grupo funerario más confiable de Honduras. Nuestra misión siempre
                 ha sido la misma: acompañar a las familias con dignidad y respeto.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Hoy, como parte del Grupo INCOSA, continuamos expandiendo nuestros 
-                servicios para servir mejor a nuestras comunidades, manteniendo 
+                Hoy, como parte del Grupo INCOSA, continuamos expandiendo nuestros
+                servicios para servir mejor a nuestras comunidades, manteniendo
                 siempre los valores que nos han definido durante más de cinco décadas.
               </p>
             </div>
@@ -113,6 +114,41 @@ export const AboutSection = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Misión y Visión */}
+          <div className="grid lg:grid-cols-2 gap-8">
+            <Card className="slide-up card-shadow">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-primary-green/10 rounded-full flex items-center justify-center">
+                    <Heart className="w-6 h-6 text-primary-green" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-elegant-gray">Nuestra Misión</h3>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  Brindar servicios funerarios de la más alta calidad, acompañando a las familias
+                  hondureñas con respeto, dignidad y profesionalismo en sus momentos más significativos,
+                  siendo un apoyo integral y confiable.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="slide-up card-shadow">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-primary-gold/10 rounded-full flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-primary-gold" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-elegant-gray">Nuestra Visión</h3>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  Ser el grupo funerario líder en Honduras, reconocidos por nuestra excelencia en el
+                  servicio, innovación constante y compromiso con las familias, expandiendo nuestra
+                  cobertura nacional mientras mantenemos los más altos estándares de calidad.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
