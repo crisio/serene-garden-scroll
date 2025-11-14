@@ -50,6 +50,67 @@ export interface Post {
   };
 }
 
+// Carousel image entity (backend currently has no attributes; we keep it flexible)
+export interface CarussellImageAttributes {
+  // Suggestion: title?: string; order?: number; link?: string;
+  // If media field exists, it should be here, but since schema has no attributes yet, we keep generic
+  [key: string]: unknown;
+}
+
+export type CarussellImage = CarussellImageAttributes;
+
+// Strapi Upload types (partial)
+export interface StrapiMediaFormat {
+  url: string;
+  width?: number;
+  height?: number;
+}
+
+export interface StrapiMediaAttributes {
+  url: string;
+  alternativeText?: string | null;
+  width?: number;
+  height?: number;
+  formats?: {
+    thumbnail?: StrapiMediaFormat;
+    small?: StrapiMediaFormat;
+    medium?: StrapiMediaFormat;
+    large?: StrapiMediaFormat;
+  };
+}
+
+export type StrapiMedia = {
+  data?: StrapiEntity<StrapiMediaAttributes> | null;
+};
+
+// Hero slide entity
+export interface HeroSlide {
+  title: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+  order: number;
+  isActive: boolean;
+  startAt?: string | null;
+  endAt?: string | null;
+  overlayOpacity?: number;
+  cover?: StrapiMedia;
+}
+
+// Helpers to cope with Strapi v4/v5 response shapes
+export const pickAttributes = <T extends Record<string, unknown>>(item: any): T => {
+  // v4: { id, attributes: {...} } ; v5: fields at top-level
+  return (item?.attributes ?? item) as T;
+};
+
+export const pickMediaUrl = (media?: StrapiMedia | any): string | undefined => {
+  const attrs: StrapiMediaAttributes | undefined = media?.data?.attributes ?? media?.attributes ?? media;
+  if (!attrs) return undefined;
+  // Prefer large > url fallback
+  const candidate = attrs.formats?.large?.url || attrs.url || attrs.formats?.medium?.url || attrs.formats?.small?.url;
+  return candidate ? mediaUrl(candidate) : undefined;
+};
+
 // Strapi fetch options
 export interface StrapiFetchOptions {
   params?: {
@@ -236,6 +297,29 @@ export const strapiApi = {
           },
         },
         sort: ['createdAt:desc'],
+        ...options.params,
+      },
+    }),
+
+  // Get carousel images (populate all just in case media fields are added)
+  getCarouselImages: (options: StrapiFetchOptions = {}) =>
+    strapiFetch<StrapiList<CarussellImage>>('/carussell-images', {
+      ...options,
+      params: {
+        populate: '*',
+        sort: ['createdAt:desc'],
+        ...options.params,
+      },
+    }),
+
+  // Get active hero slides sorted by order (asc)
+  getHeroSlides: (options: StrapiFetchOptions = {}) =>
+    strapiFetch<StrapiList<HeroSlide>>('/hero-slides', {
+      ...options,
+      params: {
+        populate: ['cover'],
+        sort: ['order:asc'],
+        filters: { isActive: { $eq: true } },
         ...options.params,
       },
     }),

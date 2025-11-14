@@ -3,42 +3,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { fetchContactSection, type ContactSectionData } from "@/lib/strapi";
 import memorialInterior from "@/assets/memorial-interior.jpg";
 
+// Mapa de iconos disponibles
+const iconMap: Record<string, any> = {
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+};
+
 export const ContactSection = () => {
-  const contactInfo = [
-    {
-      icon: Phone,
-      title: "Teléfono de Emergencia",
-      info: "(504) 2234-5678",
-      description: "Disponible 24/7"
-    },
-    {
-      icon: Mail,
-      title: "Correo Electrónico",
-      info: "info@jardinesdelrecuerdo.hn",
-      description: "Respuesta en 24 horas"
-    },
-    {
-      icon: MapPin,
-      title: "Ubicación Principal",
-      info: "Colonia Palmira, Tegucigalpa",
-      description: "Honduras, C.A."
-    },
-    {
-      icon: Clock,
-      title: "Horarios de Atención",
-      info: "24 horas, 7 días",
-      description: "Siempre a su servicio"
-    }
-  ];
+  const [contactData, setContactData] = useState<ContactSectionData>({
+    title: "Contáctanos",
+    subtitle: "Estamos aquí para apoyarlo cuando más nos necesite. Contáctenos en cualquier momento del día o la noche.",
+    contactinfo: [],
+    emergencyTitle: "Emergencia 24/7",
+    emergencyPhone: "(504) 2234-5678",
+    emergencyButtonText: "Llamar Ahora:",
+    formTitle: "Envíanos un Mensaje",
+    formSubmitButtonText: "Enviar Mensaje",
+  });
+
+  useEffect(() => {
+    const loadData = async () => {
+      const data = await fetchContactSection();
+      console.log("Contact Section Data:", data);
+      setContactData(data);
+    };
+    loadData();
+  }, []);
+
+  const backgroundImage = contactData.backgroundImageUrl || memorialInterior;
 
   return (
     <section 
       id="contact" 
       className="py-20 parallax-section relative"
       style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(${memorialInterior})`
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(${backgroundImage})`
       }}
     >
       <div className="container mx-auto px-4">
@@ -46,12 +51,11 @@ export const ContactSection = () => {
           {/* Header */}
           <div className="text-center mb-16 slide-up">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Contáctanos
+              {contactData.title}
             </h2>
             <div className="w-24 h-1 bg-primary-gold mx-auto mb-8"></div>
             <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-              Estamos aquí para apoyarlo cuando más nos necesite. 
-              Contáctenos en cualquier momento del día o la noche.
+              {contactData.subtitle}
             </p>
           </div>
 
@@ -63,11 +67,11 @@ export const ContactSection = () => {
               </h3>
               
               <div className="grid gap-6">
-                {contactInfo.map((item, index) => {
-                  const IconComponent = item.icon;
+                {contactData.contactinfo.map((item, index) => {
+                  const IconComponent = iconMap[item.icon] || Phone;
                   return (
                     <Card 
-                      key={index}
+                      key={item.id}
                       className="bg-white/10 backdrop-blur-sm border-white/20 fade-in"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
@@ -96,13 +100,14 @@ export const ContactSection = () => {
               <Card className="bg-primary-green border-primary-green slide-up">
                 <CardContent className="p-6 text-center">
                   <h4 className="text-xl font-bold text-white mb-4">
-                    Emergencia 24/7
+                    {contactData.emergencyTitle}
                   </h4>
                   <Button 
                     size="lg"
                     className="bg-white text-primary-green hover:bg-white/90 font-bold px-8 py-4 text-lg w-full"
+                    onClick={() => window.location.href = `tel:${contactData.emergencyPhone}`}
                   >
-                    Llamar Ahora: (504) 2234-5678
+                    {contactData.emergencyButtonText} {contactData.emergencyPhone}
                   </Button>
                 </CardContent>
               </Card>
@@ -113,7 +118,7 @@ export const ContactSection = () => {
               <Card className="bg-white/10 backdrop-blur-sm border-white/20">
                 <CardContent className="p-8">
                   <h3 className="text-2xl font-bold text-white mb-8">
-                    Envíanos un Mensaje
+                    {contactData.formTitle}
                   </h3>
                   
                   <form className="space-y-6">
@@ -178,7 +183,7 @@ export const ContactSection = () => {
                       size="lg"
                       className="w-full bg-primary-gold hover:bg-primary-gold/90 text-white font-semibold py-4"
                     >
-                      Enviar Mensaje
+                      {contactData.formSubmitButtonText}
                     </Button>
                   </form>
                 </CardContent>

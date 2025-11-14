@@ -252,3 +252,16 @@ Para producción, actualiza las variables de entorno:
 VITE_API_URL_PROD=https://tu-strapi-url.com/api
 VITE_API_TOKEN=tu_token_de_produccion_aqui
 ```
+
+---
+
+## Hero dinámico con Strapi (sin código)
+
+Consulta la guía operativa con endpoints y checklist para conectar el hero/carrusel al CMS:
+
+- docs/hero-slides-integration.md
+
+Incluye:
+- Endpoints REST con filtros (activos, fechas), orden y populate de media.
+- Estrategia de imágenes por tamaño (small/medium/large).
+- Checklist de permisos, CORS y publicación.

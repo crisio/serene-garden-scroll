@@ -1,0 +1,12 @@
+# Apache SPA rewrite for Vite React build
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Serve existing files directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Otherwise, serve index.html for client-side routing
+  RewriteRule ^ index.html [L]
+</IfModule>

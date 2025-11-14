@@ -1,13 +1,140 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Menu, X } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-const logo = "/lovable-uploads/07568c23-c994-4213-83cf-06bea56fbc27.png";
+import { fetchSiteHeader } from "@/lib/strapi";
+
+const defaultLogo = "/lovable-uploads/07568c23-c994-4213-83cf-06bea56fbc27.png";
+
+type BuiltNav = { key: string; label: string; onClick: () => void };
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Strapi-driven header state
+  const [title, setTitle] = useState("Jardines del Recuerdo");
+  const [subtitle, setSubtitle] = useState("Más de 50 años de experiencia");
+  const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
+  const [menu, setMenu] = useState<BuiltNav[]>([]);
+
+  const atHome = useMemo(() => location.pathname === "/", [location.pathname]);
+
+  // Load header data from Strapi on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        console.log("Loading header data from Strapi...");
+        const hdr = await fetchSiteHeader();
+
+        console.log("Strapi response:", { hdr });
+
+        setTitle(hdr.title || "Jardines del Recuerdo");
+        setSubtitle(hdr.subtitle || "Más de 50 años de experiencia");
+        if (hdr.logoUrl) setLogoUrl(hdr.logoUrl);
+
+        // Build navigation handlers
+        const built = hdr.navItems.map((it, i) => {
+          const key = `${it.label}-${i}`;
+          
+          if (it.type === "anchor") {
+            return {
+              key,
+              label: it.label,
+              onClick: () => {
+                const el = document.getElementById(it.value);
+                if (el) {
+                  const y = el.getBoundingClientRect().top + window.pageYOffset - 100;
+                  window.scrollTo({ top: y, behavior: "smooth" });
+                }
+                setIsMobileMenuOpen(false);
+              },
+            };
+          }
+          
+          if (it.type === "route") {
+            return {
+              key,
+              label: it.label,
+              onClick: () => {
+                navigate(it.value);
+                setIsMobileMenuOpen(false);
+              },
+            };
+          }
+          
+          // external
+          return {
+            key,
+            label: it.label,
+            onClick: () => {
+              window.open(it.value, "_blank", "noopener,noreferrer");
+              setIsMobileMenuOpen(false);
+            },
+          };
+        });
+
+        console.log("Built menu items:", built);
+
+        // Fallback menu if Strapi returns nothing
+        setMenu(
+          built.length
+            ? built
+            : [
+                {
+                  key: "fb-hero",
+                  label: "INICIO",
+                  onClick: () => {
+                    const el = document.getElementById("hero");
+                    if (el) {
+                      const y = el.getBoundingClientRect().top + window.pageYOffset - 100;
+                      window.scrollTo({ top: y, behavior: "smooth" });
+                    }
+                    setIsMobileMenuOpen(false);
+                  },
+                },
+                {
+                  key: "fb-blog",
+                  label: "BLOG",
+                  onClick: () => {
+                    navigate("/blog");
+                    setIsMobileMenuOpen(false);
+                  },
+                },
+              ]
+        );
+
+        console.log("Header data loaded:", { title: hdr.title, navItems: hdr.navItems.length, menuLength: built.length });
+      } catch (error) {
+        console.error("Failed to load header data:", error);
+        // Set fallback menu on error
+        setMenu([
+          {
+            key: "fb-hero",
+            label: "INICIO",
+            onClick: () => {
+              const el = document.getElementById("hero");
+              if (el) {
+                const y = el.getBoundingClientRect().top + window.pageYOffset - 100;
+                window.scrollTo({ top: y, behavior: "smooth" });
+              }
+              setIsMobileMenuOpen(false);
+            },
+          },
+          {
+            key: "fb-blog",
+            label: "BLOG",
+            onClick: () => {
+              navigate("/blog");
+              setIsMobileMenuOpen(false);
+            },
+          },
+        ]);
+      }
+    })();
+  }, [navigate]); // Solo navigate como dependencia
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,30 +145,7 @@ export const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const headerOffset = 100; // Altura del header + espacio adicional
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
-      });
-    }
-    setIsMobileMenuOpen(false);
-  };
-
-  const navItems = [
-    { label: "INICIO", id: "hero" },
-    { label: "UBICACIONES", id: "locations" },
-    { label: "NOSOTROS", id: "about" },
-    { label: "SERVICIOS", id: "services" },
-    { label: "OTRAS GESTIONES", id: "otras-gestiones" },
-    { label: "GRUPO INCOSA", id: "group" },
-    { label: "CONTÁCTENOS", id: "contact" },
-  ];
+  const displayLogo = logoUrl || defaultLogo;
 
   return (
     <header
@@ -52,53 +156,47 @@ export const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-4 hover:opacity-80 smooth-transition">
             <img
-              src={logo}
-              alt="Jardines del Recuerdo"
+              src={displayLogo}
+              alt={title}
               className="w-16 h-16 md:w-20 md:h-20 rounded-full object-contain"
             />
-            <div className="hidden md:block">
-              <h1 className="text-xl md:text-2xl font-bold text-primary-green">
-                Jardines del Recuerdo
+            <div>
+              <h1 className="text-lg md:text-2xl font-bold text-primary-green">
+                {title}
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Más de 50 años de experiencia
+              <p className="text-xs md:text-sm text-muted-foreground">
+                {subtitle}
               </p>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8">
-            {location.pathname === '/' ? (
+            {atHome ? (
               <>
-                {navItems.map((item) => (
+                {menu.map((item) => (
                   <button
-                    key={item.id}
-                    onClick={() => scrollToSection(item.id)}
-                    className="text-sm font-medium text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                    key={item.key}
+                    onClick={item.onClick}
+                    className="text-base font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
                   >
                     {item.label}
                   </button>
                 ))}
-                <Link
-                  to="/blog"
-                  className="text-sm font-medium text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
-                >
-                  BLOG
-                </Link>
               </>
             ) : (
               <>
                 <Link
                   to="/"
-                  className="text-sm font-medium text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                  className="text-base font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
                 >
                   INICIO
                 </Link>
                 <Link
                   to="/blog"
-                  className={`text-sm font-medium smooth-transition relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 ${
-                    location.pathname.startsWith('/blog') 
-                      ? 'text-primary-green after:scale-x-100' 
+                  className={`text-base font-bold smooth-transition relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 ${
+                    location.pathname.startsWith('/blog')
+                      ? 'text-primary-green after:scale-x-100'
                       : 'text-foreground hover:text-primary-green after:scale-x-0 hover:after:scale-x-100 hover:after:origin-bottom-left'
                   }`}
                 >
@@ -123,40 +221,33 @@ export const Header = () => {
         {isMobileMenuOpen && (
           <div className="lg:hidden mt-4 py-4 border-t border-border">
             <nav className="flex flex-col space-y-4">
-              {location.pathname === '/' ? (
+              {atHome ? (
                 <>
-                  {navItems.map((item) => (
+                  {menu.map((item) => (
                     <button
-                      key={item.id}
-                      onClick={() => scrollToSection(item.id)}
-                      className="text-left text-sm font-medium text-foreground hover:text-primary-green smooth-transition"
+                      key={item.key}
+                      onClick={item.onClick}
+                      className="text-left text-sm font-bold text-foreground hover:text-primary-green smooth-transition"
                     >
                       {item.label}
                     </button>
                   ))}
-                  <Link
-                    to="/blog"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-left text-sm font-medium text-foreground hover:text-primary-green smooth-transition"
-                  >
-                    BLOG
-                  </Link>
                 </>
               ) : (
                 <>
                   <Link
                     to="/"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-left text-sm font-medium text-foreground hover:text-primary-green smooth-transition"
+                    className="text-left text-sm font-bold text-foreground hover:text-primary-green smooth-transition"
                   >
                     INICIO
                   </Link>
                   <Link
                     to="/blog"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-left text-sm font-medium smooth-transition ${
-                      location.pathname.startsWith('/blog') 
-                        ? 'text-primary-green' 
+                    className={`text-left text-sm font-bold smooth-transition ${
+                      location.pathname.startsWith('/blog')
+                        ? 'text-primary-green'
                         : 'text-foreground hover:text-primary-green'
                     }`}
                   >

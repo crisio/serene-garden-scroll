@@ -3,65 +3,55 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Calendar, Clock, ArrowRight, User, Home, ArrowLeft } from "lucide-react";
-import { fetchBlogPosts, fetchBlogCategories, fetchSiteHeader, type BlogPost, type BlogCategory } from "@/lib/strapi";
+import { Search, Calendar, ArrowRight, User, Home, ArrowLeft, MapPin } from "lucide-react";
+import { fetchObituaries, fetchSiteHeader, type Obituary } from "@/lib/strapi";
 
-const POSTS_PER_PAGE = 6;
+const OBITUARIES_PER_PAGE = 9;
 const defaultLogo = "/lovable-uploads/07568c23-c994-4213-83cf-06bea56fbc27.png";
 
-export default function Blog() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [categories, setCategories] = useState<BlogCategory[]>([]);
-  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
+export default function Obituarios() {
+  const [obituaries, setObituaries] = useState<Obituary[]>([]);
+  const [filteredObituaries, setFilteredObituaries] = useState<Obituary[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [logoUrl, setLogoUrl] = useState<string>(defaultLogo);
 
   useEffect(() => {
     Promise.all([
-      fetchBlogPosts(),
-      fetchBlogCategories(),
+      fetchObituaries(),
       fetchSiteHeader(),
-    ]).then(([postsData, categoriesData, headerData]) => {
-      setPosts(postsData.posts);
-      setFilteredPosts(postsData.posts);
-      setCategories(categoriesData);
+    ]).then(([obituariesData, headerData]) => {
+      setObituaries(obituariesData.obituaries);
+      setFilteredObituaries(obituariesData.obituaries);
       if (headerData.logoUrl) setLogoUrl(headerData.logoUrl);
       setIsLoading(false);
     });
   }, []);
 
-  // Filter posts by search and category
+  // Filter obituaries by search
   useEffect(() => {
-    let filtered = posts;
-
-    // Filter by category
-    if (selectedCategory) {
-      filtered = filtered.filter(post => post.category?.slug === selectedCategory);
-    }
+    let filtered = obituaries;
 
     // Filter by search term
     if (searchTerm.trim()) {
       const lowerSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(post =>
-        post.title.toLowerCase().includes(lowerSearch) ||
-        post.excerpt.toLowerCase().includes(lowerSearch) ||
-        post.author.toLowerCase().includes(lowerSearch)
+      filtered = filtered.filter(obit =>
+        obit.fullName.toLowerCase().includes(lowerSearch) ||
+        obit.funeralHome?.toLowerCase().includes(lowerSearch) ||
+        obit.ceremonyLocation?.toLowerCase().includes(lowerSearch)
       );
     }
 
-    setFilteredPosts(filtered);
+    setFilteredObituaries(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [searchTerm, selectedCategory, posts]);
+  }, [searchTerm, obituaries]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
-  const paginatedPosts = filteredPosts.slice(startIndex, startIndex + POSTS_PER_PAGE);
+  const totalPages = Math.ceil(filteredObituaries.length / OBITUARIES_PER_PAGE);
+  const startIndex = (currentPage - 1) * OBITUARIES_PER_PAGE;
+  const paginatedObituaries = filteredObituaries.slice(startIndex, startIndex + OBITUARIES_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -89,9 +79,9 @@ export default function Blog() {
             </Link>
           </div>
 
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Nuestro Blog</h1>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">Obituarios</h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Información, consejos y guías para acompañarte en los momentos importantes
+            Honrando la memoria de nuestros seres queridos
           </p>
           <div className="mt-6">
             <Link to="/">
@@ -103,54 +93,25 @@ export default function Blog() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="max-w-4xl mx-auto mb-8 space-y-4">
-          {/* Search */}
+        {/* Search */}
+        <div className="max-w-4xl mx-auto mb-8">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Buscar artículos..."
+              placeholder="Buscar por nombre..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-white"
             />
           </div>
-
-          {/* Categories */}
-          {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Button
-                variant={selectedCategory === null ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(null)}
-              >
-                Todas
-              </Button>
-              {categories.map((category) => (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.slug ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category.slug)}
-                  style={
-                    selectedCategory === category.slug && category.color
-                      ? { backgroundColor: category.color, borderColor: category.color }
-                      : undefined
-                  }
-                >
-                  {category.name}
-                </Button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Loading State */}
         {isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: POSTS_PER_PAGE }).map((_, i) => (
+            {Array.from({ length: OBITUARIES_PER_PAGE }).map((_, i) => (
               <Card key={i} className="overflow-hidden">
-                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-64 w-full" />
                 <CardHeader>
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-4 w-full" />
@@ -164,36 +125,33 @@ export default function Blog() {
           </div>
         )}
 
-        {/* Posts Grid */}
+        {/* Obituaries Grid */}
         {!isLoading && (
           <>
-            {filteredPosts.length === 0 ? (
+            {filteredObituaries.length === 0 ? (
               <div className="text-center py-12">
                 <div className="bg-white rounded-lg p-8 max-w-md mx-auto shadow-sm">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No se encontraron artículos</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No se encontraron obituarios</h3>
                   <p className="text-slate-600 mb-4">
-                    {searchTerm || selectedCategory
-                      ? "No hay artículos que coincidan con tus filtros"
-                      : "No hay artículos publicados aún."
+                    {searchTerm
+                      ? "No hay obituarios que coincidan con tu búsqueda"
+                      : "No hay obituarios publicados aún."
                     }
                   </p>
-                  {(searchTerm || selectedCategory) && (
+                  {searchTerm && (
                     <Button
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSelectedCategory(null);
-                      }}
+                      onClick={() => setSearchTerm("")}
                       variant="outline"
                     >
-                      Ver todos los artículos
+                      Ver todos los obituarios
                     </Button>
                   )}
                 </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {paginatedPosts.map((post) => (
-                  <PostCard key={post.id} post={post} />
+                {paginatedObituaries.map((obituary) => (
+                  <ObituaryCard key={obituary.id} obituary={obituary} />
                 ))}
               </div>
             )}
@@ -241,78 +199,85 @@ export default function Blog() {
   );
 }
 
-// Post Card Component
-interface PostCardProps {
-  post: BlogPost;
+// Obituary Card Component
+interface ObituaryCardProps {
+  obituary: Obituary;
 }
 
-function PostCard({ post }: PostCardProps) {
-  // Format date
-  const publishedDate = new Date(post.publishedDate).toLocaleDateString('es-ES', {
+function ObituaryCard({ obituary }: ObituaryCardProps) {
+  // Calculate age
+  const calculateAge = (birthDate: string, deathDate: string) => {
+    const birth = new Date(birthDate);
+    const death = new Date(deathDate);
+    let age = death.getFullYear() - birth.getFullYear();
+    const monthDiff = death.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && death.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // Format dates
+  const birthYear = new Date(obituary.birthDate).getFullYear();
+  const deathYear = new Date(obituary.deathDate).getFullYear();
+  const age = calculateAge(obituary.birthDate, obituary.deathDate);
+
+  const deathDateFormatted = new Date(obituary.deathDate).toLocaleDateString('es-ES', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
 
   return (
-    <Link to={`/blog/${post.slug}`} className="block">
+    <Link to={`/obituarios/${obituary.slug}`} className="block">
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group bg-white cursor-pointer h-full">
-        {/* Image */}
-        {post.featuredImageUrl && (
-          <div className="relative h-48 overflow-hidden">
+        {/* Profile Image */}
+        {obituary.profileImageUrl && (
+          <div className="relative h-64 overflow-hidden bg-slate-100">
             <img
-              src={post.featuredImageUrl}
-              alt={post.title}
+              src={obituary.profileImageUrl}
+              alt={obituary.fullName}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
           </div>
         )}
         
         <CardHeader className="pb-3">
-          {/* Category Badge */}
-          {post.category && (
-            <Badge
-              className="mb-2 w-fit"
-              style={post.category.color ? { backgroundColor: post.category.color } : undefined}
-            >
-              {post.category.name}
-            </Badge>
-          )}
-
-          <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-            {post.title}
+          <CardTitle className="text-xl group-hover:text-primary transition-colors">
+            {obituary.fullName}
           </CardTitle>
           
-          {post.excerpt && (
-            <CardDescription className="line-clamp-3">
-              {post.excerpt}
-            </CardDescription>
-          )}
+          <CardDescription className="text-base">
+            {birthYear} - {deathYear} • {age} años
+          </CardDescription>
         </CardHeader>
         
         <CardContent className="pb-3">
-          <div className="flex items-center gap-4 text-sm text-slate-500">
-            <div className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              {publishedDate}
+          <div className="space-y-2 text-sm text-slate-600">
+            <div className="flex items-start gap-2">
+              <Calendar className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span>{deathDateFormatted}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              {post.readTime} min
-            </div>
+            {obituary.ceremonyLocation && (
+              <div className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span className="line-clamp-2">{obituary.ceremonyLocation}</span>
+              </div>
+            )}
+            {obituary.funeralHome && (
+              <div className="flex items-start gap-2">
+                <User className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span className="line-clamp-1">{obituary.funeralHome}</span>
+              </div>
+            )}
           </div>
-          {post.author && (
-            <div className="flex items-center gap-1 text-sm text-slate-500 mt-2">
-              <User className="h-4 w-4" />
-              {post.author}
-            </div>
-          )}
         </CardContent>
         
         <CardFooter className="pt-0">
           <div className="inline-flex items-center text-sm font-medium text-primary group-hover:text-primary/80 transition-colors">
-            Leer más
+            Ver obituario
             <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
           </div>
         </CardFooter>
