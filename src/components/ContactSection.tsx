@@ -75,18 +75,18 @@ export const ContactSection = () => {
                       className="bg-white/10 backdrop-blur-sm border-white/20 fade-in"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <CardContent className="p-6 flex items-center gap-4">
-                        <div className="w-12 h-12 bg-primary-gold/20 rounded-full flex items-center justify-center flex-shrink-0">
-                          <IconComponent className="w-6 h-6 text-primary-gold" />
+                      <CardContent className="p-3 sm:p-4 md:p-6 flex items-center gap-2 sm:gap-3 md:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-gold/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-primary-gold" />
                         </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-white mb-1">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-base sm:text-lg font-semibold text-white mb-1">
                             {item.title}
                           </h4>
-                          <p className="text-primary-gold font-medium mb-1">
+                          <p className="text-sm sm:text-base text-primary-gold font-medium mb-1 break-words">
                             {item.info}
                           </p>
-                          <p className="text-white/70 text-sm">
+                          <p className="text-white/70 text-xs sm:text-sm break-words">
                             {item.description}
                           </p>
                         </div>
@@ -98,13 +98,13 @@ export const ContactSection = () => {
 
               {/* Emergency Call Button */}
               <Card className="bg-primary-green border-primary-green slide-up">
-                <CardContent className="p-6 text-center">
-                  <h4 className="text-xl font-bold text-white mb-4">
+                <CardContent className="p-3 sm:p-4 md:p-6 text-center">
+                  <h4 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
                     {contactData.emergencyTitle}
                   </h4>
                   <Button 
                     size="lg"
-                    className="bg-white text-primary-green hover:bg-white/90 font-bold px-8 py-4 text-lg w-full"
+                    className="bg-white text-primary-green hover:bg-white/90 font-bold px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg w-full"
                     onClick={() => window.location.href = `tel:${contactData.emergencyPhone}`}
                   >
                     {contactData.emergencyButtonText} {contactData.emergencyPhone}
@@ -116,8 +116,8 @@ export const ContactSection = () => {
             {/* Contact Form */}
             <div className="slide-up">
               <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardContent className="p-8">
-                  <h3 className="text-2xl font-bold text-white mb-8">
+                <CardContent className="p-3 sm:p-4 md:p-6 lg:p-8">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 sm:mb-8">
                     {contactData.formTitle}
                   </h3>
                   

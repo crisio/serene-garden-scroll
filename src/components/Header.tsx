@@ -178,7 +178,7 @@ export const Header = () => {
                   <button
                     key={item.key}
                     onClick={item.onClick}
-                    className="text-base font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                    className="text-sm font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
                   >
                     {item.label}
                   </button>
@@ -188,13 +188,13 @@ export const Header = () => {
               <>
                 <Link
                   to="/"
-                  className="text-base font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                  className="text-sm font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
                 >
                   INICIO
                 </Link>
                 <Link
                   to="/blog"
-                  className={`text-base font-bold smooth-transition relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 ${
+                  className={`text-sm font-bold smooth-transition relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 ${
                     location.pathname.startsWith('/blog')
                       ? 'text-primary-green after:scale-x-100'
                       : 'text-foreground hover:text-primary-green after:scale-x-0 hover:after:scale-x-100 hover:after:origin-bottom-left'

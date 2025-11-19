@@ -74,12 +74,12 @@ export const DynamicHero = () => {
                     <div className="container mx-auto px-3 sm:px-4 md:px-6 text-center text-white">
                       <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 md:space-y-10">
                       {attrs.title && (
-                        <h1 className="text-3xl leading-tight sm:text-4xl md:text-6xl lg:text-8xl xl:text-9xl font-bold drop-shadow-lg">
+                        <h1 className="text-3xl leading-tight sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold drop-shadow-lg">
                           {attrs.title}
                         </h1>
                       )}
                       {attrs.subtitle && (
-                        <p className="text-base leading-snug sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-light opacity-95 line-clamp-2 sm:line-clamp-3 md:line-clamp-none px-1 sm:px-2 drop-shadow-md">
+                        <p className="text-base leading-snug sm:text-lg md:text-2xl lg:text-2xl xl:text-3xl font-light opacity-95 line-clamp-2 sm:line-clamp-3 md:line-clamp-none px-1 sm:px-2 drop-shadow-md">
                           {attrs.subtitle}
                         </p>
                       )}
