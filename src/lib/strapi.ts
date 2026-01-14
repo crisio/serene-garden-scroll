@@ -41,7 +41,17 @@ export type CityService = {
   id: number;
   cities: City[];  // Cambiado de city a cities (plural, porque es many)
   available: boolean;
-  features: Array<{ Text: string }>;  // Estructura del componente Features
+  features: Array<{ 
+    id: number;
+    Text: string;
+    customDescription?: string;
+    gallery?: Array<{
+      id: number;
+      url: string;
+      alternativeText?: string;
+      mimeType?: string;
+    }>;
+  }>;
   customDescription?: string;
 };
 
@@ -55,6 +65,7 @@ export type Service = {
     id: number;
     url: string;
     alternativeText?: string;
+    mimeType?: string;
   }>;
   cityservice: CityService[];  // Nombre real del campo en Strapi (singular, minúscula)
 };
@@ -71,6 +82,9 @@ export type SiteHeaderData = {
   subtitle: string;
   logoUrl?: string;
   navItems: NavItem[];
+  facebookUrl?: string;
+  instagramUrl?: string;
+  whatsappNumber?: string;
 };
 
 /**
@@ -103,6 +117,7 @@ export async function fetchServices(citySlug?: string): Promise<Service[]> {
     url.searchParams.append("populate[0]", "gallery");
     url.searchParams.append("populate[1]", "cityservice.cities");
     url.searchParams.append("populate[2]", "cityservice.features");
+    url.searchParams.append("populate[3]", "cityservice.features.gallery");
     
     const res = await fetch(url.toString(), {
       headers: { "Content-Type": "application/json", ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {}) },
@@ -117,6 +132,7 @@ export async function fetchServices(citySlug?: string): Promise<Service[]> {
             id: img.id,
             url: mediaUrl(img.url) || "",
             alternativeText: img.alternativeText || "",
+            mimeType: img.mime || img.mimeType || undefined,
           }))
         : [];
       
@@ -129,7 +145,17 @@ export async function fetchServices(citySlug?: string): Promise<Service[]> {
               slug: c.slug,
             })) : [],
             available: cs.available ?? true,
-            features: Array.isArray(cs.features) ? cs.features : [],
+            features: Array.isArray(cs.features) ? cs.features.map((f: any) => ({
+              id: f.id,
+              Text: f.Text || "",
+              customDescription: f.customDescription || undefined,
+              gallery: Array.isArray(f.gallery) ? f.gallery.map((img: any) => ({
+                id: img.id,
+                url: mediaUrl(img.url) || "",
+                alternativeText: img.alternativeText || "",
+                mimeType: img.mime || img.mimeType || undefined,
+              })) : [],
+            })) : [],
             customDescription: cs.customDescription || cs.features?.[0]?.customDescription || undefined,
           }))
         : [];
@@ -171,6 +197,7 @@ export async function fetchServiceBySlug(slug: string): Promise<Service | null> 
     url.searchParams.append("populate[0]", "gallery");
     url.searchParams.append("populate[1]", "cityservice.cities");
     url.searchParams.append("populate[2]", "cityservice.features");
+    url.searchParams.append("populate[3]", "cityservice.features.gallery");
     
     const res = await fetch(url.toString(), {
       headers: { "Content-Type": "application/json", ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {}) },
@@ -187,6 +214,7 @@ export async function fetchServiceBySlug(slug: string): Promise<Service | null> 
           id: img.id,
           url: mediaUrl(img.url) || "",
           alternativeText: img.alternativeText || "",
+          mimeType: img.mime || img.mimeType || undefined,
         }))
       : [];
     
@@ -199,7 +227,17 @@ export async function fetchServiceBySlug(slug: string): Promise<Service | null> 
             slug: c.slug,
           })) : [],
           available: cs.available ?? true,
-          features: Array.isArray(cs.features) ? cs.features : [],
+          features: Array.isArray(cs.features) ? cs.features.map((f: any) => ({
+            id: f.id,
+            Text: f.Text || "",
+            customDescription: f.customDescription || undefined,
+            gallery: Array.isArray(f.gallery) ? f.gallery.map((img: any) => ({
+              id: img.id,
+              url: mediaUrl(img.url) || "",
+              alternativeText: img.alternativeText || "",
+              mimeType: img.mime || img.mimeType || undefined,
+            })) : [],
+          })) : [],
           customDescription: cs.customDescription || cs.features?.[0]?.customDescription || undefined,
         }))
       : [];
@@ -261,6 +299,9 @@ export async function fetchSiteHeader(): Promise<SiteHeaderData> {
       subtitle: data?.subtitle ?? "Más de 50 años de experiencia",
       logoUrl,
       navItems: nav,
+      facebookUrl: data?.facebookUrl || "https://facebook.com/jardinesdelrecuerdo",
+      instagramUrl: data?.instagramUrl || "https://instagram.com/jardinesdelrecuerdo",
+      whatsappNumber: data?.whatsappNumber || "50425567400",
     };
   } catch (error) {
     console.error("Failed to fetch site-header from Strapi:", error);
@@ -269,6 +310,9 @@ export async function fetchSiteHeader(): Promise<SiteHeaderData> {
       subtitle: "Más de 50 años de experiencia",
       logoUrl: undefined,
       navItems: [],
+      facebookUrl: "https://facebook.com/jardinesdelrecuerdo",
+      instagramUrl: "https://instagram.com/jardinesdelrecuerdo",
+      whatsappNumber: "50425567400",
     };
   }
 }
@@ -843,6 +887,7 @@ export type FloatingButton = {
   label: string;
   action: "prevention-dialog" | "social-dialog" | "call";
   phoneNumber?: string;
+  phoneNumbers?: Array<{ id?: number; label?: string; phoneNumber?: string; city?: string }>;
   icon: "shield" | "message" | "phone";
   color: string;
   order: number;
@@ -858,7 +903,13 @@ export type FloatingButtonsData = {
 export async function fetchFloatingButtons(): Promise<FloatingButtonsData> {
   try {
     console.log("Fetching floating-button from Strapi...");
-    const res = await sget<any>("/api/floating-button", { populate: "*" });
+    // Populate nested phoneNumbers/emergencyNumbers using Strapi-style query params
+    // Note: avoid JSON stringify of objects; use bracket notation keys
+    const res = await sget<any>("/api/floating-button", {
+      "populate[0]": "FloatingButton",
+      "populate[1]": "FloatingButton.phoneNumbers", // Strapi v5: field name phoneNumbers
+      // Note: if you had an old field emergencyNumbers, keep parsing fallback below, but we don't populate it to avoid 400
+    });
 
     console.log("Strapi floating-button response:", res);
 
@@ -870,6 +921,12 @@ export async function fetchFloatingButtons(): Promise<FloatingButtonsData> {
       label: btn.label || "",
       action: btn.action || "call",
       phoneNumber: btn.phoneNumber || undefined,
+      phoneNumbers: (btn.phoneNumbers || btn.emergencyNumbers || []).map((p: any) => ({
+        id: p.id,
+        label: p.label || p.city || "",
+        phoneNumber: p.phoneNumber || p.number || "",
+        city: p.city || undefined,
+      })),
       icon: btn.icon || "phone",
       color: btn.color || "#10b981",
       order: btn.order || 0,
@@ -1070,6 +1127,39 @@ export async function fetchBlogPost(slug: string): Promise<BlogPost | null> {
   }
 }
 
+// ========== FLORERIA ==========
+export type FloreriaFeature = {
+  id: number;
+  icon: string;
+  title: string;
+  description: string;
+};
+
+export type FloralArrangement = {
+  id: number;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+};
+
+export type FloreriaData = {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroDescription: string;
+  heroHighlight?: string;
+  heroImageUrl?: string;
+  ctaButtonText: string;
+  ecommerceUrl?: string;
+  features: FloreriaFeature[];
+  arrangementsTitle: string;
+  arrangementsSubtitle: string;
+  arrangements: FloralArrangement[];
+  finalSectionLabel: string;
+  finalTitle: string;
+  finalDescription: string;
+  finalImageUrl?: string;
+};
+
 // ========== OBITUARIES ==========
 export type Obituary = {
   id: number;
@@ -1083,7 +1173,11 @@ export type Obituary = {
   funeralHome?: string;
   isPublished: boolean;
   profileImageUrl?: string;
-  galleryImageUrls: string[];
+  galleryMedia: Array<{
+    url: string;
+    alternativeText?: string;
+    mimeType?: string;
+  }>;
 };
 
 export async function fetchObituaries(options?: {
@@ -1120,9 +1214,13 @@ export async function fetchObituaries(options?: {
         profileImageUrl = mediaUrl(obit.profileImage.url);
       }
 
-      let galleryImageUrls: string[] = [];
+      let galleryMedia: Array<{ url: string; alternativeText?: string; mimeType?: string }> = [];
       if (obit.galleryImages && Array.isArray(obit.galleryImages)) {
-        galleryImageUrls = obit.galleryImages.map((img: any) => mediaUrl(img.url));
+        galleryMedia = obit.galleryImages.map((img: any) => ({
+          url: mediaUrl(img.url) || "",
+          alternativeText: img.alternativeText || undefined,
+          mimeType: img.mime || img.mimeType || undefined,
+        }));
       }
 
       return {
@@ -1137,7 +1235,7 @@ export async function fetchObituaries(options?: {
         funeralHome: obit.funeralHome,
         isPublished: obit.isPublished || false,
         profileImageUrl,
-        galleryImageUrls,
+        galleryMedia,
       };
     });
 
@@ -1174,9 +1272,13 @@ export async function fetchObituary(slug: string): Promise<Obituary | null> {
       profileImageUrl = mediaUrl(obit.profileImage.url);
     }
 
-    let galleryImageUrls: string[] = [];
+    let galleryMedia: Array<{ url: string; alternativeText?: string; mimeType?: string }> = [];
     if (obit.galleryImages && Array.isArray(obit.galleryImages)) {
-      galleryImageUrls = obit.galleryImages.map((img: any) => mediaUrl(img.url));
+      galleryMedia = obit.galleryImages.map((img: any) => ({
+        url: mediaUrl(img.url) || "",
+        alternativeText: img.alternativeText || undefined,
+        mimeType: img.mime || img.mimeType || undefined,
+      }));
     }
 
     return {
@@ -1191,10 +1293,131 @@ export async function fetchObituary(slug: string): Promise<Obituary | null> {
       funeralHome: obit.funeralHome,
       isPublished: obit.isPublished || false,
       profileImageUrl,
-      galleryImageUrls,
+      galleryMedia,
     };
   } catch (err) {
     console.error("Error fetching obituary:", err);
     return null;
   }
 }
+
+// ========== FLORERIA ==========
+export async function fetchFloreria(): Promise<FloreriaData> {
+  try {
+    console.log("Fetching floreria from Strapi...");
+    const res = await sget<any>("/api/floreria", {
+      populate: "*",
+    });
+
+    console.log("Strapi floreria response:", res);
+
+    // Strapi v4: res.data.attributes; v5: res.data flat; fallback to res
+    const raw = res.data || res;
+    const data = raw.attributes || raw;
+
+    // Handle Strapi v4/v5 media shapes (direct url or data.attributes.url), including arrays
+    const extractMediaUrl = (media: any): string | undefined => {
+      if (!media) return undefined;
+
+      // If media is already a string URL or path
+      if (typeof media === "string") {
+        return mediaUrl(media);
+      }
+
+      // If media is an array, use the first element
+      if (Array.isArray(media)) {
+        return extractMediaUrl(media[0]);
+      }
+
+      // Direct url on the object
+      const directUrl = media.url || media?.formats?.large?.url || media?.formats?.medium?.url || media?.formats?.small?.url;
+      if (directUrl) return mediaUrl(directUrl);
+
+      // Nested data/attributes (Strapi v4+)
+      const dataNode = media.data || media?.attributes || media?.data?.attributes;
+      if (dataNode?.url) return mediaUrl(dataNode.url);
+      if (dataNode?.attributes?.url) return mediaUrl(dataNode.attributes.url);
+
+      return undefined;
+    };
+
+    // Parse features
+    const features: FloreriaFeature[] = (data.features || []).map((feature: any) => ({
+      id: feature.id || 0,
+      icon: feature.icon || "🌸",
+      title: feature.title || "",
+      description: feature.description || "",
+    }));
+
+    // Parse arrangements
+    const arrangements: FloralArrangement[] = (data.arrangements || data.arrangement || []).map((arr: any) => ({
+      id: arr.id || 0,
+      name: arr.name || "",
+      description: arr.description || undefined,
+      imageUrl: extractMediaUrl(
+        arr.image || arr.imageUrl || arr.media || arr.photo || arr.picture
+      ),
+    }));
+
+    return {
+      heroTitle: data.heroTitle || "Florería",
+      heroSubtitle: data.heroSubtitle || "Las flores hablan cuando las palabras no alcanzan.",
+      heroDescription: data.heroDescription || "En los momentos de pérdida, a veces el corazón siente más de lo que la voz puede decir.",
+      heroHighlight: data.heroHighlight || undefined,
+      heroImageUrl: extractMediaUrl(data.heroImage),
+      ctaButtonText: data.ctaButtonText || "Enviar Flores",
+      ecommerceUrl: data.ecommerceUrl || undefined,
+      features,
+      arrangementsTitle: data.arrangementsTitle || "Arreglos florales",
+      arrangementsSubtitle: data.arrangementsSubtitle || "Con Blanc Florería hay sentimientos que florecen",
+      arrangements,
+      finalSectionLabel: data.finalSectionLabel || "Acompaña el Homenaje®",
+      finalTitle: data.finalTitle || "Enviar flores es una forma de demostrar tu compañía y apoyo",
+      finalDescription: data.finalDescription || "Acompañar a alguien en un Homenaje® no siempre requiere palabras; a veces, basta un gesto lleno de vida, color y memoria.",
+      finalImageUrl: extractMediaUrl(data.finalImage),
+    };
+  } catch (error) {
+    console.error("Error fetching floreria:", error);
+    // Return defaults
+    return {
+      heroTitle: "Florería",
+      heroSubtitle: "Las flores hablan cuando las palabras no alcanzan.",
+      heroDescription: "En los momentos de pérdida, a veces el corazón siente más de lo que la voz puede decir. Una flor puede ser ese susurro suave que dice estoy contigo o te acompaño en tu dolor.",
+      heroHighlight: "Acompañar a alguien en un Homenaje® no siempre requiere palabras; a veces, basta un gesto lleno de vida, color y memoria.",
+      ctaButtonText: "Enviar Flores",
+      features: [
+        {
+          id: 1,
+          icon: "📞",
+          title: "Servicio las 24 horas",
+          description: "Puedes pedirlo cuando nos llames para solicitar el servicio.",
+        },
+        {
+          id: 2,
+          icon: "🏠",
+          title: "Entrega directa en sala",
+          description: "Así podrás permanecer en el Homenaje® acompañando a tus seres amados.",
+        },
+        {
+          id: 3,
+          icon: "🎨",
+          title: "Arreglos frescos y de calidad",
+          description: "Seleccionamos flores frescas y de temporada.",
+        },
+        {
+          id: 4,
+          icon: "🌸",
+          title: "Gran variedad de diseños",
+          description: "Realizados por expertos florales.",
+        },
+      ],
+      arrangementsTitle: "Arreglos florales",
+      arrangementsSubtitle: "Con Blanc Florería hay sentimientos que florecen",
+      arrangements: [],
+      finalSectionLabel: "Acompaña el Homenaje®",
+      finalTitle: "Enviar flores es una forma de demostrar tu compañía y apoyo",
+      finalDescription: "Acompañar a alguien en un Homenaje® no siempre requiere palabras; a veces, basta un gesto lleno de vida, color y memoria.",
+    };
+  }
+}
+

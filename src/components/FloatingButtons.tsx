@@ -1,14 +1,25 @@
-import { useState, useEffect } from "react";
-import { Phone, Shield, MessageCircle, Plus, X } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Phone, Shield, MessageCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PreventionDialog } from "./PreventionDialog";
 import { SocialMediaDialog } from "./SocialMediaDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { fetchFloatingButtons, type FloatingButton } from "@/lib/strapi";
 
 export const FloatingButtons = () => {
   const [isPreventionDialogOpen, setIsPreventionDialogOpen] = useState(false);
   const [isSocialDialogOpen, setIsSocialDialogOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
+  const [selectedEmergencyNumbers, setSelectedEmergencyNumbers] = useState<
+    Array<{ id?: number; label?: string; phoneNumber?: string; city?: string }>
+  >([]);
   
   // Strapi data
   const [mobileHelpText, setMobileHelpText] = useState("¿Necesitas ayuda?");
@@ -49,8 +60,14 @@ export const FloatingButtons = () => {
         setIsSocialDialogOpen(true);
         break;
       case "call":
-        if (button.phoneNumber) {
-          window.location.href = `tel:${button.phoneNumber}`;
+        {
+          const numbers = (button.phoneNumbers && button.phoneNumbers.length > 0)
+            ? button.phoneNumbers
+            : (button.phoneNumber
+                ? [{ id: button.id, label: button.label, phoneNumber: button.phoneNumber }]
+                : []);
+          setSelectedEmergencyNumbers(numbers);
+          setIsEmergencyModalOpen(true);
         }
         break;
     }
@@ -63,6 +80,12 @@ export const FloatingButtons = () => {
 
   const desktopButtons = buttons.filter(btn => btn.showOnDesktop);
   const mobileButtons = buttons.filter(btn => btn.showOnMobile);
+
+  const emergencyModalTitle = useMemo(() => {
+    if (!selectedEmergencyNumbers.length) return "Llamada de emergencia";
+    // If any city present use generic title
+    return "Llamada de emergencia";
+  }, [selectedEmergencyNumbers]);
 
   return (
     <>
@@ -155,6 +178,40 @@ export const FloatingButtons = () => {
         isOpen={isSocialDialogOpen}
         onClose={() => setIsSocialDialogOpen(false)}
       />
+
+      <Dialog open={isEmergencyModalOpen} onOpenChange={setIsEmergencyModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{emergencyModalTitle}</DialogTitle>
+            <DialogDescription>
+              Elige el número según la ciudad.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {selectedEmergencyNumbers.map((item) => (
+              <Button
+                key={item.id ?? item.phoneNumber}
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => {
+                  if (item.phoneNumber) {
+                    window.location.href = `tel:${item.phoneNumber}`;
+                  }
+                  setIsEmergencyModalOpen(false);
+                }}
+              >
+                <span className="font-semibold text-left">
+                  {item.label || item.city || "Emergencia"}
+                </span>
+                <span className="text-muted-foreground">{item.phoneNumber}</span>
+              </Button>
+            ))}
+            {!selectedEmergencyNumbers.length && (
+              <p className="text-sm text-muted-foreground">No hay números configurados.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

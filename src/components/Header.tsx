@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Facebook, Instagram, Phone } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { fetchSiteHeader } from "@/lib/strapi";
@@ -19,6 +19,11 @@ export const Header = () => {
   const [subtitle, setSubtitle] = useState("Más de 50 años de experiencia");
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
   const [menu, setMenu] = useState<BuiltNav[]>([]);
+  const [socialMedia, setSocialMedia] = useState({
+    facebook: "https://facebook.com/jardinesdelrecuerdo",
+    instagram: "https://instagram.com/jardinesdelrecuerdo",
+    whatsapp: "50425567400",
+  });
 
   const atHome = useMemo(() => location.pathname === "/", [location.pathname]);
 
@@ -34,6 +39,12 @@ export const Header = () => {
         setTitle(hdr.title || "Jardines del Recuerdo");
         setSubtitle(hdr.subtitle || "Más de 50 años de experiencia");
         if (hdr.logoUrl) setLogoUrl(hdr.logoUrl);
+        
+        setSocialMedia({
+          facebook: hdr.facebookUrl || "https://facebook.com/jardinesdelrecuerdo",
+          instagram: hdr.instagramUrl || "https://instagram.com/jardinesdelrecuerdo",
+          whatsapp: hdr.whatsappNumber || "50425567400",
+        });
 
         // Build navigation handlers
         const built = hdr.navItems.map((it, i) => {
@@ -178,7 +189,7 @@ export const Header = () => {
                   <button
                     key={item.key}
                     onClick={item.onClick}
-                    className="text-sm font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                    className="text-[0.7rem] font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
                   >
                     {item.label}
                   </button>
@@ -188,13 +199,13 @@ export const Header = () => {
               <>
                 <Link
                   to="/"
-                  className="text-sm font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                  className="text-[0.7rem] font-bold text-foreground hover:text-primary-green smooth-transition relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left"
                 >
                   INICIO
                 </Link>
                 <Link
                   to="/blog"
-                  className={`text-sm font-bold smooth-transition relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 ${
+                  className={`text-[0.7rem] font-bold smooth-transition relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bottom-0 after:left-0 after:bg-primary-green after:origin-bottom-right after:transition-transform after:duration-300 ${
                     location.pathname.startsWith('/blog')
                       ? 'text-primary-green after:scale-x-100'
                       : 'text-foreground hover:text-primary-green after:scale-x-0 hover:after:scale-x-100 hover:after:origin-bottom-left'
@@ -204,6 +215,37 @@ export const Header = () => {
                 </Link>
               </>
             )}
+            
+            {/* Social Media Icons */}
+            <div className="flex items-center gap-3 ml-4 pl-4 border-l border-border">
+              <a
+                href={socialMedia.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"
+                aria-label="Facebook"
+              >
+                <Facebook size={18} />
+              </a>
+              <a
+                href={socialMedia.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"
+                aria-label="Instagram"
+              >
+                <Instagram size={18} />
+              </a>
+              <a
+                href={`https://wa.me/${socialMedia.whatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"
+                aria-label="WhatsApp"
+              >
+                <Phone size={18} />
+              </a>
+            </div>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -227,7 +269,7 @@ export const Header = () => {
                     <button
                       key={item.key}
                       onClick={item.onClick}
-                      className="text-left text-sm font-bold text-foreground hover:text-primary-green smooth-transition"
+                      className="text-left text-[0.7rem] font-bold text-foreground hover:text-primary-green smooth-transition"
                     >
                       {item.label}
                     </button>
@@ -238,14 +280,14 @@ export const Header = () => {
                   <Link
                     to="/"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-left text-sm font-bold text-foreground hover:text-primary-green smooth-transition"
+                    className="text-left text-[0.7rem] font-bold text-foreground hover:text-primary-green smooth-transition"
                   >
                     INICIO
                   </Link>
                   <Link
                     to="/blog"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-left text-sm font-bold smooth-transition ${
+                    className={`text-left text-[0.7rem] font-bold smooth-transition ${
                       location.pathname.startsWith('/blog')
                         ? 'text-primary-green'
                         : 'text-foreground hover:text-primary-green'
@@ -255,6 +297,37 @@ export const Header = () => {
                   </Link>
                 </>
               )}
+              
+              {/* Social Media Icons - Mobile */}
+              <div className="flex items-center gap-4 pt-4 border-t border-border">
+                <a
+                  href={socialMedia.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"
+                  aria-label="Facebook"
+                >
+                  <Facebook size={20} />
+                </a>
+                <a
+                  href={socialMedia.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"
+                  aria-label="Instagram"
+                >
+                  <Instagram size={20} />
+                </a>
+                <a
+                  href={`https://wa.me/${socialMedia.whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"
+                  aria-label="WhatsApp"
+                >
+                  <Phone size={20} />
+                </a>
+              </div>
             </nav>
           </div>
         )}

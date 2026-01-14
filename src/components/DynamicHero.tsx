@@ -12,6 +12,26 @@ const openCta = (url: string) => {
   else window.location.href = url; // internal route
 };
 
+// Mapeo de tamaños de texto
+const getTitleSizeClasses = (size: string = 'large') => {
+  const sizeMap = {
+    small: 'text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl',
+    medium: 'text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl',
+    large: 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl',
+    xlarge: 'text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl',
+  };
+  return sizeMap[size as keyof typeof sizeMap] || sizeMap.large;
+};
+
+const getSubtitleSizeClasses = (size: string = 'medium') => {
+  const sizeMap = {
+    small: 'text-sm sm:text-base md:text-base lg:text-lg xl:text-xl',
+    medium: 'text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl',
+    large: 'text-lg sm:text-xl md:text-2xl lg:text-2xl xl:text-3xl',
+  };
+  return sizeMap[size as keyof typeof sizeMap] || sizeMap.medium;
+};
+
 export const DynamicHero = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["hero-slides"],
@@ -52,34 +72,51 @@ export const DynamicHero = () => {
           {slides.map((attrs: any, idx: number) => {
             const bg = pickMediaUrl(attrs.cover);
             const overlay = typeof attrs.overlayOpacity === 'number' ? attrs.overlayOpacity : 0.4;
+            const isVideo = bg && (bg.endsWith('.mp4') || bg.endsWith('.webm') || bg.endsWith('.mov') || bg.endsWith('.avi'));
+            
             return (
               <CarouselItem key={idx} className="h-full pl-0 basis-full" style={{ height: '100vh' }}>
                 <div className="relative w-full" style={{ height: '100vh' }}>
-                  {/* Background image */}
-                  {bg && (
-                    <img
-                      src={bg}
-                      alt={attrs?.cover?.data?.attributes?.alternativeText || attrs?.title || `slide-${idx+1}`}
-                      className="absolute inset-0 w-full h-full object-cover object-center"
-                      loading={idx === 0 ? 'eager' : 'lazy'}
+                  {/* Background media - video o imagen */}
+                  <div className="absolute inset-0 w-full h-full overflow-hidden">
+                    {bg && (
+                      isVideo ? (
+                        <video
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          className="w-full h-full object-cover"
+                        >
+                          <source src={bg} type="video/mp4" />
+                        </video>
+                      ) : (
+                        <img
+                          src={bg}
+                          alt={attrs?.cover?.data?.attributes?.alternativeText || attrs?.title || `slide-${idx+1}`}
+                          className="w-full h-full object-cover object-center"
+                          loading={idx === 0 ? 'eager' : 'lazy'}
+                        />
+                      )
+                    )}
+                    {/* Overlay con gradiente */}
+                    <div
+                      className="absolute inset-0 bg-gradient-to-b from-black/70 to-transparent"
+                      style={{ background: `linear-gradient(to bottom, rgba(0,0,0,${Math.min(overlay + 0.3, 0.8)}), transparent)` }}
                     />
-                  )}
-                  {/* Overlay - más oscuro en móvil para mejor contraste */}
-                  <div
-                    className="absolute inset-0 w-full h-full"
-                    style={{ background: `rgba(0,0,0,${Math.min(overlay + 0.2, 0.7)})` }}
-                  />
+                  </div>
+                  
                   {/* Content */}
                   <div className="relative z-10 h-full w-full flex items-center justify-center">
                     <div className="container mx-auto px-3 sm:px-4 md:px-6 text-center text-white">
                       <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 md:space-y-10">
                       {attrs.title && (
-                        <h1 className="text-3xl leading-tight sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold drop-shadow-lg">
+                        <h1 className={`${getTitleSizeClasses(attrs.titleSize)} leading-tight font-normal drop-shadow-lg`} style={{ fontFamily: '"PT Serif", serif' }}>
                           {attrs.title}
                         </h1>
                       )}
                       {attrs.subtitle && (
-                        <p className="text-base leading-snug sm:text-lg md:text-2xl lg:text-2xl xl:text-3xl font-light opacity-95 line-clamp-2 sm:line-clamp-3 md:line-clamp-none px-1 sm:px-2 drop-shadow-md">
+                        <p className={`${getSubtitleSizeClasses(attrs.subtitleSize)} leading-snug font-light opacity-95 line-clamp-2 sm:line-clamp-3 md:line-clamp-none px-1 sm:px-2 drop-shadow-md`} style={{ fontFamily: '"PT Serif", serif' }}>
                           {attrs.subtitle}
                         </p>
                       )}

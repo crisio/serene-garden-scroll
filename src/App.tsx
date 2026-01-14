@@ -8,6 +8,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Obituarios from "./pages/Obituarios";
 import ObituaryPost from "./pages/ObituaryPost";
+import Floreria from "./pages/Floreria";
 import { ServiceGallery } from "./pages/ServiceGallery";
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/obituarios" element={<Obituarios />} />
           <Route path="/obituarios/:slug" element={<ObituaryPost />} />
+          <Route path="/floreria" element={<Floreria />} />
           <Route path="/servicio/:slug" element={<ServiceGallery />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

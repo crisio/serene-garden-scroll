@@ -230,6 +230,11 @@ export default function ObituaryPost() {
 
   const age = calculateAge(obituary.birthDate, obituary.deathDate);
 
+  const isVideo = (media: { url: string; mimeType?: string }) => {
+    if (media.mimeType?.toLowerCase().startsWith("video")) return true;
+    return /\.(mp4|webm|ogg|mov|m4v|avi)$/i.test(media.url) || media.mimeType?.toLowerCase().includes("quicktime") === true;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
@@ -338,17 +343,29 @@ export default function ObituaryPost() {
               </div>
 
               {/* Gallery */}
-              {obituary.galleryImageUrls.length > 0 && (
+              {obituary.galleryMedia.length > 0 && (
                 <div className="mb-8">
                   <h2 className="text-2xl font-bold text-slate-900 mb-4">Galería de Fotos</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {obituary.galleryImageUrls.map((imageUrl, index) => (
-                      <div key={index} className="relative aspect-square overflow-hidden rounded-lg">
-                        <img
-                          src={imageUrl}
-                          alt={`Foto ${index + 1} de ${obituary.fullName}`}
-                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                        />
+                    {obituary.galleryMedia.map((media, index) => (
+                      <div key={index} className="relative aspect-square overflow-hidden rounded-lg bg-slate-100 flex items-center justify-center">
+                        {isVideo(media) ? (
+                          <video
+                            controls
+                            preload="metadata"
+                            className="w-full h-full object-contain bg-black"
+                            playsInline
+                          >
+                            <source src={media.url} type={media.mimeType || "video/mp4"} />
+                            Tu navegador no soporta reproducir este video.
+                          </video>
+                        ) : (
+                          <img
+                            src={media.url}
+                            alt={media.alternativeText || `Foto ${index + 1} de ${obituary.fullName}`}
+                            className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                          />
+                        )}
                       </div>
                     ))}
                   </div>

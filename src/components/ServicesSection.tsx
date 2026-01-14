@@ -15,6 +15,7 @@ import { scrollToSection } from "@/lib/scrollUtils";
 import { useState, useEffect, useRef } from "react";
 import { fetchCities, fetchServices, type City, type Service } from "@/lib/strapi";
 import { useNavigate } from "react-router-dom";
+import { FeatureGalleryModal } from "@/components/FeatureGalleryModal";
 
 // Mapa de iconos disponibles
 const iconMap: Record<string, any> = {
@@ -29,6 +30,15 @@ export const ServicesSection = () => {
   const [cities, setCities] = useState<City[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal state for feature gallery
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedFeature, setSelectedFeature] = useState<{
+    name: string;
+    images: Array<{ id: number; url: string; alternativeText?: string }>;
+    cityName?: string;
+    customDescription?: string;
+  } | null>(null);
   
   const autoplayPlugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
@@ -59,6 +69,23 @@ export const ServicesSection = () => {
     navigate(`/servicio/${slug}`);
   };
 
+  const handleFeatureClick = (
+    featureName: string,
+    featureGallery: any[],
+    cityName?: string,
+    customDescription?: string
+  ) => {
+    if (featureGallery && featureGallery.length > 0) {
+      setSelectedFeature({
+        name: featureName,
+        images: featureGallery,
+        cityName,
+        customDescription,
+      });
+      setModalOpen(true);
+    }
+  };
+
   const renderServiceCard = (service: Service, index: number) => {
     const IconComponent = iconMap[service.icon] || Flower;
     
@@ -69,8 +96,10 @@ export const ServicesSection = () => {
         )
       : service.cityservice[0]; // Usar primera ciudad si no hay filtro
     
-    const features = cityService?.features.map(f => f.Text) || [];
-    const description = cityService?.customDescription || service.description;
+    const features = cityService?.features || [];
+    // Mantener la descripción general del servicio en la card; las descripciones personalizadas van en el modal por feature
+    const description = service.description;
+    const cityName = cityService?.cities[0]?.name;
     
     return (
       <Card 
@@ -93,12 +122,25 @@ export const ServicesSection = () => {
           
           {features.length > 0 && (
             <ul className="space-y-3 mb-8">
-              {features.map((feature, featureIndex) => (
-                <li key={featureIndex} className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-primary-green rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">{feature}</span>
-                </li>
-              ))}
+              {features.map((feature, featureIndex) => {
+                const hasGallery = feature.gallery && feature.gallery.length > 0;
+                return (
+                  <li 
+                    key={featureIndex} 
+                    className={`flex items-center gap-3 ${hasGallery ? 'cursor-pointer hover:bg-primary-green/5 -mx-2 px-2 py-1 rounded-md transition-colors' : ''}`}
+                    onClick={() => hasGallery && handleFeatureClick(
+                      feature.Text,
+                      feature.gallery!,
+                      cityName,
+                      feature.customDescription
+                    )}
+                    title={hasGallery ? 'Click para ver imágenes' : ''}
+                  >
+                    <div className="w-2 h-2 bg-primary-green rounded-full flex-shrink-0"></div>
+                    <span className="text-sm text-muted-foreground flex-1">{feature.Text}</span>
+                  </li>
+                );
+              })}
             </ul>
           )}
           
@@ -227,6 +269,21 @@ export const ServicesSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Feature Gallery Modal */}
+      {selectedFeature && (
+        <FeatureGalleryModal
+          isOpen={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedFeature(null);
+          }}
+          featureName={selectedFeature.name}
+          images={selectedFeature.images}
+          cityName={selectedFeature.cityName}
+          customDescription={selectedFeature.customDescription}
+        />
+      )}
     </section>
   );
 };
