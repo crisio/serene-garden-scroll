@@ -236,12 +236,12 @@ export const LocationsSection = () => {
                   {pageData.ctaSubtitle}
                 </p>
                 <Button
-                  size="lg"
-                  className="bg-white text-primary-green hover:bg-white/90 font-semibold px-8 py-4"
-                  onClick={() => scrollToSection("contact")}
-                >
-                  {pageData.ctaButtonText}
-                </Button>
+			  asChild
+			  size="lg"
+			  className="bg-white text-primary-green hover:bg-white/90 font-semibold px-8 py-4"
+			>
+			  <a href="tel:+50425024331">{pageData.ctaButtonText}</a>
+			</Button>
               </CardContent>
             </Card>
           </div>
@@ -250,3 +250,4 @@ export const LocationsSection = () => {
     </section>
   );
 };
+	

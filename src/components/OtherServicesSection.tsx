@@ -134,7 +134,7 @@ export const OtherServicesSection = () => {
           </div>
 
           {/* Buscador */}
-          <div className="max-w-xl mx-auto mb-12">
+          <div className="max-w-xl mx-auto mb-12" style={{ display: "none" }}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input

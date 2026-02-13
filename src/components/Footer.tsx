@@ -12,6 +12,10 @@ export const Footer = () => {
     fetchFooter().then(setFooterData);
   }, []);
 
+  const handleScrollToSection = (sectionId: string) => {
+    scrollToSectionUtil(sectionId);
+  };
+
   if (!footerData) {
     return null;
   }

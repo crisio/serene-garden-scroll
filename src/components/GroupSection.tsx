@@ -30,7 +30,7 @@ export const GroupSection = () => {
   }, []);
 
   return (
-    <section id="group" className="py-20 bg-elegant-gray text-white">
+    <section id="group" className="py-20 text-white" style={{ backgroundColor: "hsl(150.64deg, 39.5%, 23.33%)" }}>
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -74,7 +74,7 @@ export const GroupSection = () => {
           )}
 
           {/* Mission Statement */}
-          <div className="mt-16 text-center bg-white/5 backdrop-blur-sm rounded-2xl p-12 slide-up">
+          <div className="mt-16 text-center bg-white/5 backdrop-blur-sm rounded-2xl p-12 slide-up" style={{ display: "none" }}>
             <h3 className="text-3xl font-bold mb-6">{groupData.missionTitle}</h3>
             <p className="text-xl text-white/90 max-w-4xl mx-auto leading-relaxed">
               {groupData.missionContent}

@@ -252,19 +252,33 @@ export const ServicesSection = () => {
               para atender sus necesidades con la atención que usted merece.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg"
-                className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
-              >
-                Llamar Ahora: (504) 2234-5678
-              </Button>
-              <Button
-                size="lg"
-                className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
-                onClick={() => scrollToSection("contact")}
-              >
-                Contactar Online
-              </Button>
+             <Button
+		  asChild
+		  size="lg"
+		  className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
+		>
+		  <a
+		    href="https://wa.me/50425024331?text=Hola,%20necesito%20ayuda%20de%20emergencia"
+		    target="_blank"
+		    rel="noreferrer"
+		  >
+		    Línea directa de Emergencia: 2502-4331
+		  </a>
+		</Button>
+
+		<Button
+		  asChild
+		  size="lg"
+		  className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
+		>
+		  <a
+		    href="https://wa.me/50425024330?text=Hola,%20quisiera%20información%20sobre%20prever%20y%20otras%20gestiones"
+		    target="_blank"
+		    rel="noreferrer"
+		  >
+		    Prever y otras gestiones: 2502-4330
+		  </a>
+		</Button>
             </div>
           </div>
         </div>
