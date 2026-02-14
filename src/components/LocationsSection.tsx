@@ -71,14 +71,10 @@ export const LocationsSection = () => {
             </p>
             <div className="flex flex-wrap gap-2 mb-3">
               {location.phone.map((phone, idx) => (
-                <a 
-                  key={idx} 
-                  href={`tel:${phone.number.replace(/\D/g, '')}`}
-                  className="flex items-center gap-1 text-sm text-primary-green hover:text-primary-green/80 transition-colors cursor-pointer"
-                >
+                <div key={idx} className="flex items-center gap-1 text-sm text-primary-green">
                   <Phone className="w-3 h-3" />
                   <span>{phone.number}</span>
-                </a>
+                </div>
               ))}
             </div>
             <Button

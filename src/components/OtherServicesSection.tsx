@@ -52,8 +52,7 @@ export const OtherServicesSection = () => {
   );
 
   const handleCall = (phoneNumber: string) => {
-    const cleanNumber = phoneNumber.replace(/\D/g, '');
-    window.location.href = `tel:${cleanNumber}`;
+    window.location.href = `tel:${phoneNumber}`;
   };
 
   const handleWhatsApp = (phoneNumber: string) => {
@@ -87,13 +86,10 @@ export const OtherServicesSection = () => {
             <div className="mt-auto w-full flex flex-col gap-3">
               {service.phonenumber.map((phone: { id: number; number: string }) => (
                 <div key={phone.id} className="w-full flex items-center justify-between gap-2">
-                  <a 
-                    href={`tel:${phone.number.replace(/\D/g, '')}`}
-                    className="flex items-center gap-2 text-primary-green hover:text-primary-green/80 transition-colors cursor-pointer"
-                  >
+                  <div className="flex items-center gap-2 text-primary-green">
                     <Phone className="w-4 h-4" />
                     <span className="font-semibold">{phone.number}</span>
-                  </a>
+                  </div>
                   
                   <div className="flex items-center gap-2">
                     <Button
