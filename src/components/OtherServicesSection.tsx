@@ -1,4 +1,4 @@
-import { Phone, FileText, Award, CreditCard, FileCheck, Users, Clipboard, UserCheck, FilePlus, Search } from "lucide-react";
+import { Phone, PhoneCall, MessageCircle, FileText, Award, CreditCard, FileCheck, Users, Clipboard, UserCheck, FilePlus, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,8 +69,8 @@ export const OtherServicesSection = () => {
         className="hover:shadow-lg transition-all duration-300 h-full fade-in"
         style={{ animationDelay: `${index * 0.1}s` }}
       >
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center text-center">
+        <CardContent className="p-6 h-full flex flex-col items-center text-center">
+          <div className="w-full flex flex-col items-center">
             <div className="w-16 h-16 bg-primary-gold/10 rounded-full flex items-center justify-center mb-4">
               <IconComponent className="w-8 h-8 text-primary-gold" />
             </div>
@@ -80,35 +80,41 @@ export const OtherServicesSection = () => {
             <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
               {service.description}
             </p>
-            
-            {service.phonenumber && service.phonenumber.length > 0 && (
-              <>
-                <div className="flex items-center gap-2 text-primary-green mb-4">
-                  <Phone className="w-4 h-4" />
-                  <span className="font-semibold">{service.phonenumber[0].number}</span>
-                </div>
-                
-                <div className="flex gap-2 w-full">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-primary-green border-primary-green hover:bg-primary-green hover:text-white"
-                    onClick={() => handleCall(service.phonenumber[0].number)}
-                  >
-                    Llamar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-primary-green border-primary-green hover:bg-primary-green hover:text-white"
-                    onClick={() => handleWhatsApp(service.phonenumber[0].number)}
-                  >
-                    WhatsApp
-                  </Button>
-                </div>
-              </>
-            )}
           </div>
+          
+          {service.phonenumber && service.phonenumber.length > 0 && (
+            <div className="mt-auto w-full flex flex-col gap-3">
+              {service.phonenumber.map((phone: { id: number; number: string }) => (
+                <div key={phone.id} className="w-full flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-primary-green">
+                    <Phone className="w-4 h-4" />
+                    <span className="font-semibold">{phone.number}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="text-primary-green border-primary-green hover:bg-primary-green hover:text-white"
+                      onClick={() => handleCall(phone.number)}
+                      aria-label={`Llamar ${phone.number}`}
+                    >
+                      <PhoneCall className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="text-primary-green border-primary-green hover:bg-primary-green hover:text-white"
+                      onClick={() => handleWhatsApp(phone.number)}
+                      aria-label={`WhatsApp ${phone.number}`}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     );

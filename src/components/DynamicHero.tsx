@@ -15,10 +15,10 @@ const openCta = (url: string) => {
 // Mapeo de tamaños de texto
 const getTitleSizeClasses = (size: string = 'large') => {
   const sizeMap = {
-    small: 'text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl',
-    medium: 'text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl',
-    large: 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl',
-    xlarge: 'text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl',
+    small: 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[86px]',
+    medium: 'text-5xl sm:text-6xl md:text-7xl lg:text-[86px] xl:text-[115px]',
+    large: 'text-6xl sm:text-7xl md:text-[86px] lg:text-[115px] xl:text-[154px]',
+    xlarge: 'text-7xl sm:text-[86px] md:text-[115px] lg:text-[154px] xl:text-[172px]',
   };
   return sizeMap[size as keyof typeof sizeMap] || sizeMap.large;
 };
@@ -111,7 +111,7 @@ export const DynamicHero = () => {
                     <div className="container mx-auto px-3 sm:px-4 md:px-6 text-center text-white">
                       <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 md:space-y-10">
                       {attrs.title && (
-                        <h1 className={`${getTitleSizeClasses(attrs.titleSize)} leading-tight font-normal drop-shadow-lg`} style={{ fontFamily: '"PT Serif", serif' }}>
+                        <h1 className={`${getTitleSizeClasses(attrs.titleSize)} leading-tight font-normal drop-shadow-lg`} style={{ fontFamily: 'Edwardian Script ITC, cursive' }}>
                           {attrs.title}
                         </h1>
                       )}

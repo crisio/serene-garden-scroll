@@ -3,6 +3,7 @@ import { Menu, X, Facebook, Instagram, Phone } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { fetchSiteHeader } from "@/lib/strapi";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 
 const defaultLogo = "/lovable-uploads/07568c23-c994-4213-83cf-06bea56fbc27.png";
 
@@ -160,7 +161,7 @@ export const Header = () => {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 smooth-transition bg-card/95 backdrop-blur-md elegant-shadow"
+      className="fixed top-0 left-0 right-0 z-50 smooth-transition bg-card/95 backdrop-blur-md elegant-shadow relative"
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
@@ -243,7 +244,7 @@ export const Header = () => {
                 className="w-9 h-9 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"
                 aria-label="WhatsApp"
               >
-                <Phone size={18} />
+                <WhatsAppIcon size={18} />
               </a>
             </div>
           </nav>
@@ -261,8 +262,9 @@ export const Header = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden mt-4 py-4 border-t border-border">
-            <nav className="flex flex-col space-y-4">
+          <div className="lg:hidden absolute left-0 right-0 top-full bg-card/95 backdrop-blur-md border-t border-border shadow-lg">
+            <div className="container mx-auto px-4 py-4 max-h-[70vh] overflow-y-auto">
+              <nav className="flex flex-col space-y-4">
               {atHome ? (
                 <>
                   {menu.map((item) => (
@@ -325,10 +327,11 @@ export const Header = () => {
                   className="w-10 h-10 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"
                   aria-label="WhatsApp"
                 >
-                  <Phone size={20} />
+                  <WhatsAppIcon size={20} />
                 </a>
               </div>
-            </nav>
+              </nav>
+            </div>
           </div>
         )}
       </div>

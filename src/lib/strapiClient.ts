@@ -131,11 +131,7 @@ export interface StrapiFetchOptions {
 
 // Get API URL from environment variables
 const getAPIUrl = (): string => {
-  const isDev = import.meta.env.DEV;
-  const devUrl = import.meta.env.VITE_API_URL;
-  const prodUrl = import.meta.env.VITE_API_URL_PROD;
-  
-  return isDev ? devUrl : prodUrl;
+  return import.meta.env.VITE_API_URL;
 };
 
 // Get API token from environment variables

@@ -187,22 +187,27 @@ export const LocationsSection = () => {
               <Card className="bg-gradient-to-r from-primary-green/10 to-primary-green/5 overflow-hidden">
                 <CardContent className="p-0">
                   {/* Imagen de grama como fondo */}
-                  <div className="relative min-h-[300px] flex items-center justify-center">
+                  <div className="relative min-h-[220px] sm:min-h-[300px] flex items-center justify-center">
                     {/* Overlay oscuro para contraste */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60 z-10"></div>
                     
                     {/* Contenido */}
-                    <div className="relative z-20 text-center px-6 py-12">
-                      <h4 className="text-2xl font-bold text-white mb-6 drop-shadow-lg">
+                    <div className="relative z-20 text-center px-4 sm:px-6 py-10 sm:py-12">
+                      <h4 className="text-xl sm:text-2xl font-bold text-white mb-6 drop-shadow-lg">
                         {pageData.grassMaintenanceTitle}
                       </h4>
                       {pageData.grassPhones.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-4">
+                        <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
                           {pageData.grassPhones.map((phone, idx) => (
-                            <div key={idx} className="flex items-center gap-2 text-primary-green bg-white px-5 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                            <a
+                              key={idx}
+                              href={`tel:${phone.number.replace(/\D/g, "")}`}
+                              className="flex items-center justify-center gap-2 text-primary-green bg-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto"
+                              aria-label={`Llamar ${phone.number}`}
+                            >
                               <Phone className="w-5 h-5" />
-                              <span className="font-semibold text-lg">{phone.number}</span>
-                            </div>
+                              <span className="font-semibold text-base sm:text-lg">{phone.number}</span>
+                            </a>
                           ))}
                         </div>
                       )}
@@ -213,7 +218,7 @@ export const LocationsSection = () => {
                       <img 
                         src={pageData.grassImageUrl} 
                         alt="Mantenimiento de Grama" 
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover object-center"
                       />
                     ) : (
                       // Fallback gradient si no hay imagen

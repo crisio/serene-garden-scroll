@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Shield, Phone, MessageCircle, Calendar } from "lucide-react";
+import { Shield, MessageCircle } from "lucide-react";
 
 interface PreventionDialogProps {
   isOpen: boolean;
@@ -17,11 +17,6 @@ export const PreventionDialog = ({ isOpen, onClose }: PreventionDialogProps) => 
   const handleWhatsApp = () => {
     const mensaje = "Hola, me interesa información sobre planes de previsión para proteger a mi familia";
     window.open("https://wa.me/50499746421?text=" + encodeURIComponent(mensaje), "_blank");
-    onClose();
-  };
-
-  const handleCall = () => {
-    window.location.href = "tel:+50499746421";
     onClose();
   };
 
@@ -66,10 +61,10 @@ export const PreventionDialog = ({ isOpen, onClose }: PreventionDialogProps) => 
             </ul>
           </div>
 
-          <div className="grid gap-3">
+          <div>
             <Button
               onClick={handleWhatsApp}
-              className="bg-[#25D366] hover:bg-[#25D366]/90 text-white justify-start gap-3 h-14"
+              className="bg-[#25D366] hover:bg-[#25D366]/90 text-white justify-start gap-3 h-14 w-full"
             >
               <MessageCircle className="w-5 h-5" fill="currentColor" />
               <div className="text-left">
@@ -77,22 +72,6 @@ export const PreventionDialog = ({ isOpen, onClose }: PreventionDialogProps) => 
                 <div className="text-xs opacity-90">Asesora de Previsión</div>
               </div>
             </Button>
-
-            <Button
-              onClick={handleCall}
-              className="bg-primary-green hover:bg-primary-green/90 text-white justify-start gap-3 h-14"
-            >
-              <Phone className="w-5 h-5" />
-              <div className="text-left">
-                <div className="font-semibold">Llamar Ahora</div>
-                <div className="text-xs opacity-90">9974-6421</div>
-              </div>
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center mt-2">
-            <Calendar className="w-4 h-4" />
-            <span>Atención de Lunes a Sábado, 8:00 AM - 6:00 PM</span>
           </div>
         </div>
       </DialogContent>

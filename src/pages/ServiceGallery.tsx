@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { fetchServiceBySlug, type Service } from "@/lib/strapi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { FeatureGalleryModal } from "@/components/FeatureGalleryModal";
 import { ArrowLeft, Flower, Building2, Flame } from "lucide-react";
 
 // Mapa de iconos disponibles
@@ -22,8 +16,15 @@ const iconMap: Record<string, any> = {
 export const ServiceGallery = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const cityParam = searchParams.get("ciudad");
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [selectedGallery, setSelectedGallery] = useState<{
+    name: string;
+    images: Service["gallery"];
+  } | null>(null);
 
   useEffect(() => {
     const loadService = async () => {
@@ -69,6 +70,51 @@ export const ServiceGallery = () => {
   }
 
   const IconComponent = iconMap[service.icon] || Flower;
+  const normalizePhone = (value: string) => value.replace(/\D/g, "");
+  
+  // City-specific contact mapping
+  const cityContactsMap: Record<string, Array<{ title: string; phone: string; type: "call" | "whatsapp"; cityName?: string }>> = {
+    "san-pedro-sula": [
+      { title: "Línea Directa de Emergencia", phone: "25024331", type: "call", cityName: "San Pedro Sula" },
+      { title: "Línea Previa Necesidad", phone: "25024330", type: "call", cityName: "San Pedro Sula" },
+      { title: "WhatsApp", phone: "99746421", type: "whatsapp", cityName: "San Pedro Sula" },
+    ],
+    "la-ceiba": [
+      { title: "Línea Directa Emergencia", phone: "25024333", type: "call", cityName: "La Ceiba" },
+      { title: "Línea Contestadora", phone: "25024332", type: "call", cityName: "La Ceiba" },
+      { title: "Celular / WhatsApp", phone: "94592620", type: "whatsapp", cityName: "La Ceiba" },
+    ],
+  };
+  
+  // Extract available cities from service
+  const availableCitySlugs = service.cityservice
+    .filter(cs => cs.available)
+    .flatMap(cs => cs.cities.map(city => city.slug));
+  
+  // Determine which contact sets to display based on city param or all available cities
+  const contactOptions = cityParam
+    ? // If city param exists, show only that city's contacts
+      cityContactsMap[cityParam] || []
+    : // Otherwise show all available cities' contacts
+      availableCitySlugs.reduce((acc, citySlug) => {
+        const cityContacts = cityContactsMap[citySlug];
+        if (cityContacts) {
+          return [...acc, ...cityContacts];
+        }
+        return acc;
+      }, [] as Array<{ title: string; phone: string; type: "call" | "whatsapp"; cityName?: string }>);
+  
+  // Fallback to San Pedro Sula if no matching cities found
+  const finalContactOptions = contactOptions.length > 0 ? contactOptions : cityContactsMap["san-pedro-sula"];
+  const isVideo = (media: { url: string; mimeType?: string }) => {
+    if (media.mimeType?.toLowerCase().startsWith("video")) return true;
+    return /\.(mp4|webm|ogg|mov|m4v|avi)$/i.test(media.url) || media.mimeType?.toLowerCase().includes("quicktime") === true;
+  };
+  const openGallery = () => {
+    if (!service.gallery.length) return;
+    setSelectedGallery({ name: service.name, images: service.gallery });
+    setGalleryOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -137,33 +183,38 @@ export const ServiceGallery = () => {
         {service.gallery.length > 0 && (
           <>
             <h2 className="text-3xl font-bold text-elegant-gray mb-6">Galería</h2>
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
-              <CarouselContent>
-                {service.gallery.map((image) => (
-                  <CarouselItem key={image.id} className="md:basis-1/2 lg:basis-1/3">
-                    <div className="p-1">
-                      <Card className="overflow-hidden group cursor-pointer hover:shadow-xl transition-shadow">
-                        <div className="aspect-[4/3] relative overflow-hidden">
-                          <img
-                            src={image.url}
-                            alt={image.alternativeText || service.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                        </div>
-                      </Card>
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+              {service.gallery.map((media) => (
+                <button
+                  key={media.id}
+                  type="button"
+                  className="mb-4 break-inside-avoid w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 rounded-xl"
+                  onClick={openGallery}
+                  aria-label="Ver imagen en detalle"
+                >
+                  <Card className="overflow-hidden group cursor-zoom-in hover:shadow-xl transition-shadow">
+                    <div className="relative w-full">
+                      {isVideo(media) ? (
+                        <video
+                          muted
+                          playsInline
+                          preload="metadata"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        >
+                          <source src={media.url} type={media.mimeType || "video/mp4"} />
+                        </video>
+                      ) : (
+                        <img
+                          src={media.url}
+                          alt={media.alternativeText || service.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      )}
                     </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-2" />
-              <CarouselNext className="right-2" />
-            </Carousel>
+                  </Card>
+                </button>
+              ))}
+            </div>
           </>
         )}
 
@@ -180,29 +231,57 @@ export const ServiceGallery = () => {
       <div className="bg-primary-green/5 py-16">
         <div className="container mx-auto px-4 max-w-4xl text-center">
           <h3 className="text-3xl font-bold text-elegant-gray mb-4">
-            ¿Necesita más información sobre {service.name}?
+            ¿Necesita Nuestros Servicios?
           </h3>
           <p className="text-xl text-muted-foreground mb-8">
-            Estamos disponibles 24/7 para atender sus consultas
+            Estamos disponibles las 24 horas del día, los 7 días de la semana para atender sus necesidades con la atención que usted merece.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg"
-              className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
-            >
-              Llamar Ahora: (504) 2234-5678
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-primary-green text-primary-green hover:bg-primary-green hover:text-white px-8 py-4 text-lg"
-              onClick={() => navigate("/#contact")}
-            >
-              Contactar Online
-            </Button>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {finalContactOptions.map((contact, idx) => (
+              <Card key={`${contact.cityName}-${idx}`} className="p-6 text-left">
+                {contact.cityName && availableCitySlugs.length > 1 && (
+                  <p className="text-xs font-semibold text-primary-green mb-2 uppercase">
+                    {contact.cityName}
+                  </p>
+                )}
+                <h4 className="text-lg font-bold text-elegant-gray mb-2">
+                  {contact.title}
+                </h4>
+                <p className="text-muted-foreground mb-4">{contact.phone}</p>
+                <div className="flex">
+                  {contact.type === "whatsapp" ? (
+                    <Button asChild className="bg-primary-green hover:bg-primary-green/90 text-white w-full">
+                      <a 
+                        href={`https://wa.me/504${normalizePhone(contact.phone)}?text=Hola,%20necesito%20información`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Enviar WhatsApp
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button asChild className="bg-primary-green hover:bg-primary-green/90 text-white w-full">
+                      <a href={`tel:${normalizePhone(contact.phone)}`}>Llamar ahora</a>
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
+
+      {selectedGallery && (
+        <FeatureGalleryModal
+          isOpen={galleryOpen}
+          onClose={() => {
+            setGalleryOpen(false);
+            setSelectedGallery(null);
+          }}
+          featureName={selectedGallery.name}
+          images={selectedGallery.images}
+        />
+      )}
     </div>
   );
 };

@@ -13,7 +13,7 @@ import Autoplay from "embla-carousel-autoplay";
 import cemeteryGarden from "@/assets/cemetery-garden.jpg";
 import { scrollToSection } from "@/lib/scrollUtils";
 import { useState, useEffect, useRef } from "react";
-import { fetchCities, fetchServices, type City, type Service } from "@/lib/strapi";
+import { fetchCities, fetchServices, fetchContactSection, type City, type Service } from "@/lib/strapi";
 import { useNavigate } from "react-router-dom";
 import { FeatureGalleryModal } from "@/components/FeatureGalleryModal";
 
@@ -30,7 +30,8 @@ export const ServicesSection = () => {
   const [cities, setCities] = useState<City[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>(cemeteryGarden);
+
   // Modal state for feature gallery
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState<{
@@ -39,10 +40,21 @@ export const ServicesSection = () => {
     cityName?: string;
     customDescription?: string;
   } | null>(null);
-  
+
   const autoplayPlugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
   );
+
+  // Cargar imagen de fondo desde contact-section
+  useEffect(() => {
+    const loadBackgroundImage = async () => {
+      const contactData = await fetchContactSection();
+      if (contactData.backgroundImageUrl) {
+        setBackgroundImageUrl(contactData.backgroundImageUrl);
+      }
+    };
+    loadBackgroundImage();
+  }, []);
 
   // Cargar ciudades al montar
   useEffect(() => {
@@ -65,8 +77,12 @@ export const ServicesSection = () => {
     loadServices();
   }, [selectedCity]);
 
-  const handleServiceClick = (slug: string) => {
-    navigate(`/servicio/${slug}`);
+  const handleServiceClick = (slug: string, citySlug?: string) => {
+    if (citySlug) {
+      navigate(`/servicio/${slug}?ciudad=${citySlug}`);
+    } else {
+      navigate(`/servicio/${slug}`);
+    }
   };
 
   const handleFeatureClick = (
@@ -90,16 +106,24 @@ export const ServicesSection = () => {
     const IconComponent = iconMap[service.icon] || Flower;
     
     // Obtener características para la ciudad seleccionada
-    const cityService = selectedCity !== "all"
-      ? service.cityservice.find(cs => 
-          cs.cities.some(city => city.slug === selectedCity)
-        )
-      : service.cityservice[0]; // Usar primera ciudad si no hay filtro
+    let cityService;
+    if (selectedCity !== "all") {
+      // Si hay una ciudad específica seleccionada, usarla
+      cityService = service.cityservice.find(cs => 
+        cs.cities.some(city => city.slug === selectedCity)
+      );
+    } else {
+      // Si no hay filtro, priorizar San Pedro Sula
+      cityService = service.cityservice.find(cs => 
+        cs.cities.some(city => city.slug === "san-pedro-sula")
+      ) || service.cityservice[0]; // Fallback a primera ciudad si SPS no existe
+    }
     
     const features = cityService?.features || [];
     // Mantener la descripción general del servicio en la card; las descripciones personalizadas van en el modal por feature
     const description = service.description;
     const cityName = cityService?.cities[0]?.name;
+    const citySlug = cityService?.cities[0]?.slug;
     
     return (
       <Card 
@@ -107,7 +131,7 @@ export const ServicesSection = () => {
         className="group hover:scale-105 smooth-transition card-shadow fade-in h-full"
         style={{ animationDelay: `${index * 0.1}s` }}
       >
-        <CardContent className="p-8 text-center">
+        <CardContent className="p-8 text-center h-full flex flex-col">
           <div className="w-20 h-20 bg-primary-green/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary-green/20 smooth-transition">
             <IconComponent className="w-10 h-10 text-primary-green" />
           </div>
@@ -146,8 +170,8 @@ export const ServicesSection = () => {
           
           <Button 
             variant="outline" 
-            className="border-primary-green text-primary-green hover:bg-primary-green hover:text-white w-full smooth-transition"
-            onClick={() => handleServiceClick(service.slug)}
+            className="border-primary-green text-primary-green hover:bg-primary-green hover:text-white w-full smooth-transition mt-auto"
+            onClick={() => handleServiceClick(service.slug, citySlug)}
           >
             Más Información
           </Button>
@@ -157,11 +181,11 @@ export const ServicesSection = () => {
   };
 
   return (
-    <section 
-      id="services" 
+    <section
+      id="services"
       className="py-20 parallax-section relative"
       style={{
-        backgroundImage: `linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url(${cemeteryGarden})`
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url(${backgroundImageUrl})`
       }}
     >
       <div className="container mx-auto px-4">
@@ -255,7 +279,7 @@ export const ServicesSection = () => {
              <Button
 		  asChild
 		  size="lg"
-		  className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
+      className="bg-primary-green hover:bg-primary-green/90 text-white px-4 py-3 text-base sm:text-lg w-full sm:w-auto h-auto whitespace-normal leading-snug text-center"
 		>
 		  <a
 		    href="https://wa.me/50425024331?text=Hola,%20necesito%20ayuda%20de%20emergencia"
@@ -269,7 +293,7 @@ export const ServicesSection = () => {
 		<Button
 		  asChild
 		  size="lg"
-		  className="bg-primary-green hover:bg-primary-green/90 text-white px-8 py-4 text-lg"
+      className="bg-primary-green hover:bg-primary-green/90 text-white px-4 py-3 text-base sm:text-lg w-full sm:w-auto h-auto whitespace-normal leading-snug text-center"
 		>
 		  <a
 		    href="https://wa.me/50425024330?text=Hola,%20quisiera%20información%20sobre%20prever%20y%20otras%20gestiones"

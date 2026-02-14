@@ -16,6 +16,7 @@ const iconMap: Record<string, any> = {
 };
 
 export const ContactSection = () => {
+  const normalizePhone = (value: string) => value.replace(/\D/g, "");
   const [contactData, setContactData] = useState<ContactSectionData>({
     title: "Contáctanos",
     subtitle: "Estamos aquí para apoyarlo cuando más nos necesite. Contáctenos en cualquier momento del día o la noche.",
@@ -105,7 +106,7 @@ export const ContactSection = () => {
                   <Button 
                     size="lg"
                     className="bg-white text-primary-green hover:bg-white/90 font-bold px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg w-full"
-                    onClick={() => window.location.href = `tel:${contactData.emergencyPhone}`}
+                    onClick={() => window.location.href = `tel:${normalizePhone(contactData.emergencyPhone)}`}
                   >
                     {contactData.emergencyButtonText} {contactData.emergencyPhone}
                   </Button>
