@@ -107,7 +107,7 @@ export const DynamicHero = () => {
                   </div>
                   
                   {/* Content */}
-                  <div className="relative z-10 h-full w-full flex items-center justify-center">
+                  <div className="relative z-10 h-full w-full flex items-center justify-center pt-[15vh]">
                     <div className="container mx-auto px-3 sm:px-4 md:px-6 text-center text-white">
                       <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 md:space-y-10">
                       {attrs.title && (

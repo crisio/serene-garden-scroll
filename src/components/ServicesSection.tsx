@@ -281,11 +281,7 @@ export const ServicesSection = () => {
 		  size="lg"
       className="bg-primary-green hover:bg-primary-green/90 text-white px-4 py-3 text-base sm:text-lg w-full sm:w-auto h-auto whitespace-normal leading-snug text-center"
 		>
-		  <a
-		    href="https://wa.me/50425024331?text=Hola,%20necesito%20ayuda%20de%20emergencia"
-		    target="_blank"
-		    rel="noreferrer"
-		  >
+		  <a href="tel:25024331">
 		    Línea directa de Emergencia: 2502-4331
 		  </a>
 		</Button>
@@ -295,11 +291,7 @@ export const ServicesSection = () => {
 		  size="lg"
       className="bg-primary-green hover:bg-primary-green/90 text-white px-4 py-3 text-base sm:text-lg w-full sm:w-auto h-auto whitespace-normal leading-snug text-center"
 		>
-		  <a
-		    href="https://wa.me/50425024330?text=Hola,%20quisiera%20información%20sobre%20prever%20y%20otras%20gestiones"
-		    target="_blank"
-		    rel="noreferrer"
-		  >
+		  <a href="tel:25024330">
 		    Prever y otras gestiones: 2502-4330
 		  </a>
 		</Button>

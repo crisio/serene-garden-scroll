@@ -106,7 +106,11 @@ export const ContactSection = () => {
                   <Button 
                     size="lg"
                     className="bg-white text-primary-green hover:bg-white/90 font-bold px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg w-full"
-                    onClick={() => window.location.href = `tel:${normalizePhone(contactData.emergencyPhone)}`}
+                    onClick={() => {
+                      const cleanNumber = normalizePhone(contactData.emergencyPhone);
+                      const localNumber = cleanNumber.startsWith('504') ? cleanNumber.slice(3) : cleanNumber;
+                      window.location.href = `tel:${localNumber}`;
+                    }}
                   >
                     {contactData.emergencyButtonText} {contactData.emergencyPhone}
                   </Button>
