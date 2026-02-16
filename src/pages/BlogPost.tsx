@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Calendar, Clock, Share2, User, Phone } from "lucide-react";
-import { fetchBlogPost, fetchContactSection, type BlogPost as BlogPostType } from "@/lib/strapi";
+import { fetchBlogPost, fetchContactSection, fetchFloatingButtons, type BlogPost as BlogPostType } from "@/lib/strapi";
 
 // Helper function to render Strapi Blocks
 function renderBlocks(blocks: any[]): JSX.Element[] {
@@ -95,7 +95,7 @@ export default function BlogPost() {
   const [post, setPost] = useState<BlogPostType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [emergencyPhone, setEmergencyPhone] = useState("(504) 2234-5678");
+  const [preverPhones, setPreverPhones] = useState<any[]>([]);
 
   useEffect(() => {
     if (!slug) {
@@ -106,16 +106,27 @@ export default function BlogPost() {
 
     Promise.all([
       fetchBlogPost(slug),
-      fetchContactSection(),
+      fetchFloatingButtons(),
     ])
-      .then(([postData, contactData]) => {
+      .then(([postData, floatingButtonsData]) => {
         if (postData) {
           setPost(postData);
         } else {
           setError(true);
         }
-        if (contactData.emergencyPhone) {
-          setEmergencyPhone(contactData.emergencyPhone);
+        // Extract all PREVER button phone numbers
+        if (floatingButtonsData?.buttons) {
+          const preverButton = floatingButtonsData.buttons.find(
+            (btn: any) => btn.label === "PREVER"
+          );
+          if (preverButton?.phoneNumbers && Array.isArray(preverButton.phoneNumbers)) {
+            const phones = preverButton.phoneNumbers.map((item: any) => ({
+              label: item.label,
+              phoneNumber: item.phoneNumber.trim(),
+              city: item.city
+            }));
+            setPreverPhones(phones);
+          }
         }
       })
       .catch(() => setError(true))
@@ -293,18 +304,25 @@ export default function BlogPost() {
                   <p className="text-slate-600 mb-6">
                     Nuestros asesores están disponibles 24/7 para atenderte y resolver todas tus dudas
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <a href={`tel:${emergencyPhone}`}>
-                      <Button size="lg" className="gap-2 w-full sm:w-auto">
-                        <Phone className="h-5 w-5" />
-                        Llamar Ahora
-                      </Button>
-                    </a>
-                    <div className="flex items-center gap-2 text-lg font-semibold text-slate-700">
-                      <Phone className="h-5 w-5 text-primary" />
-                      {emergencyPhone}
+                  {preverPhones.length > 0 ? (
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {preverPhones.map((phone: any, index: number) => (
+                        <a key={index} href={`tel:${phone.phoneNumber}`}>
+                          <Button size="lg" className="gap-2">
+                            <Phone className="h-5 w-5" />
+                            {phone.city}
+                          </Button>
+                        </a>
+                      ))}
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                      <Button size="lg" className="gap-2 w-full sm:w-auto" disabled>
+                        <Phone className="h-5 w-5" />
+                        No disponible
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -238,7 +238,10 @@ export const ServiceGallery = () => {
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {finalContactOptions.map((contact, idx) => (
-              <Card key={`${contact.cityName}-${idx}`} className="p-6 text-left">
+              <Card
+                key={`${contact.cityName}-${idx}`}
+                className="p-6 text-left h-full flex flex-col"
+              >
                 {contact.cityName && availableCitySlugs.length > 1 && (
                   <p className="text-xs font-semibold text-primary-green mb-2 uppercase">
                     {contact.cityName}
@@ -248,7 +251,7 @@ export const ServiceGallery = () => {
                   {contact.title}
                 </h4>
                 <p className="text-muted-foreground mb-4">{contact.phone}</p>
-                <div className="flex">
+                <div className="flex mt-auto pt-4">
                   {contact.type === "whatsapp" ? (
                     <Button asChild className="bg-primary-green hover:bg-primary-green/90 text-white w-full">
                       <a 

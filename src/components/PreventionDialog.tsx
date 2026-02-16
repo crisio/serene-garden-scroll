@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,7 +7,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Shield, MessageCircle } from "lucide-react";
+import { Shield, MessageCircle, Phone } from "lucide-react";
+import { fetchFloatingButtons } from "@/lib/strapi";
 
 interface PreventionDialogProps {
   isOpen: boolean;
@@ -14,6 +16,24 @@ interface PreventionDialogProps {
 }
 
 export const PreventionDialog = ({ isOpen, onClose }: PreventionDialogProps) => {
+  const [preverPhones, setPreverPhones] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchFloatingButtons().then((data) => {
+      if (data?.buttons) {
+        const preverButton = data.buttons.find((btn: any) => btn.label === "PREVER");
+        if (preverButton?.phoneNumbers && Array.isArray(preverButton.phoneNumbers)) {
+          const phones = preverButton.phoneNumbers.map((item: any) => ({
+            label: item.label,
+            phoneNumber: item.phoneNumber.trim(),
+            city: item.city
+          }));
+          setPreverPhones(phones);
+        }
+      }
+    });
+  }, []);
+
   const handleWhatsApp = () => {
     const mensaje = "Hola, me interesa información sobre planes de previsión para proteger a mi familia";
     window.open("https://wa.me/50499746421?text=" + encodeURIComponent(mensaje), "_blank");
@@ -61,10 +81,10 @@ export const PreventionDialog = ({ isOpen, onClose }: PreventionDialogProps) => 
             </ul>
           </div>
 
-          <div>
+          <div className="hidden">
             <Button
               onClick={handleWhatsApp}
-              className="bg-[#25D366] hover:bg-[#25D366]/90 text-white justify-start gap-3 h-14 w-full"
+              className="bg-[#25D366] hover:bg-[#25D366]/90 text-white justify-start h-14 w-full"
             >
               <MessageCircle className="w-5 h-5" fill="currentColor" />
               <div className="text-left">
@@ -72,6 +92,30 @@ export const PreventionDialog = ({ isOpen, onClose }: PreventionDialogProps) => 
                 <div className="text-xs opacity-90">Asesora de Previsión</div>
               </div>
             </Button>
+          </div>
+
+          <div className="border-t mt-4 pt-4 flex flex-col gap-2">
+            <p className="text-sm font-semibold text-slate-700">Llamanos directamente:</p>
+            {preverPhones.length > 0 ? (
+              preverPhones.map((phone: any, index: number) => (
+                <a key={index} href={`tel:${phone.phoneNumber}`}>
+                  <Button className="bg-primary-green hover:bg-primary-green/90 text-white justify-start gap-3 h-14 w-full">
+                    <Phone className="w-5 h-5" />
+                    <div className="text-left">
+                      <div className="font-semibold">{phone.label}</div>
+                      <div className="text-xs opacity-90">{phone.phoneNumber}</div>
+                    </div>
+                  </Button>
+                </a>
+              ))
+            ) : (
+              <Button className="bg-slate-200 text-slate-500 justify-start gap-3 h-14 w-full" disabled>
+                <Phone className="w-5 h-5" />
+                <div className="text-left">
+                  <div className="font-semibold">Números no disponibles</div>
+                </div>
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

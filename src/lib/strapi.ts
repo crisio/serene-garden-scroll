@@ -352,7 +352,7 @@ export type Location = {
 export type LocationsPageData = {
   title: string;
   subtitle: string;
-  grassMaintenanceTitle: string;
+  grassMaintenanceTitle?: string;
   grassPhones: LocationPhone[];
   grassImageUrl?: string;
   ctaTitle: string;
@@ -399,10 +399,12 @@ export async function fetchLocationsPage(): Promise<LocationsPageData> {
     const json = await sget<any>("/api/locations-page", {
       populate: "*",
     });
-    const data = json?.data ?? {};
+    const data = json?.data?.attributes ?? json?.data ?? {};
     
     // Extract grass image URL
-    const grassImageUrl = mediaUrl(data?.grassImage?.url);
+    const grassImageUrl = mediaUrl(
+      data?.grassImage?.data?.attributes?.url ?? data?.grassImage?.url
+    );
     
     console.log("Locations-page raw data:", data);
     console.log("Grass image extracted:", grassImageUrl);
@@ -410,7 +412,7 @@ export async function fetchLocationsPage(): Promise<LocationsPageData> {
     return {
       title: data.title ?? "Nuestras Sucursales",
       subtitle: data.subtitle ?? "Presencia en las principales ciudades de Honduras para servirle mejor",
-      grassMaintenanceTitle: data.grassMaintenanceTitle ?? "Contactos Responsables de Mantenimiento de Grama",
+      grassMaintenanceTitle: data.grassMaintenanceTitle ?? data.grassMaintenanceTitl,
       grassPhones: data.grassPhones ?? [],
       grassImageUrl,
       ctaTitle: data.ctaTitle ?? "¿Necesita asistencia inmediata?",
@@ -422,7 +424,7 @@ export async function fetchLocationsPage(): Promise<LocationsPageData> {
     return {
       title: "Nuestras Sucursales",
       subtitle: "Presencia en las principales ciudades de Honduras para servirle mejor",
-      grassMaintenanceTitle: "Contactos Responsables de Mantenimiento de Grama",
+      grassMaintenanceTitle: undefined,
       grassPhones: [],
       grassImageUrl: undefined,
       ctaTitle: "¿Necesita asistencia inmediata?",
@@ -1305,8 +1307,19 @@ export async function fetchObituary(slug: string): Promise<Obituary | null> {
 export async function fetchFloreria(): Promise<FloreriaData> {
   try {
     console.log("Fetching floreria from Strapi...");
-    const res = await sget<any>("/api/floreria", {
-      populate: "*",
+    // Para traer relaciones anidadas en arrays, necesitamos pasar populate correctamente
+    const url = new URL(`${BASE}/api/floreria`);
+    url.searchParams.append("populate", "heroImage");
+    url.searchParams.append("populate", "finalImage");
+    url.searchParams.append("populate", "features");
+    url.searchParams.append("populate", "arrangements");
+    url.searchParams.append("populate", "arrangements.image");
+    
+    const res = await fetch(url.toString(), {
+      headers: { "Content-Type": "application/json", ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {}) },
+    }).then(r => {
+      if (!r.ok) throw new Error(`Strapi ${r.status}: ${r.statusText}`);
+      return r.json();
     });
 
     console.log("Strapi floreria response:", res);

@@ -20,7 +20,7 @@ export const LocationsSection = () => {
   const [pageData, setPageData] = useState<LocationsPageData>({
     title: "Nuestras Sucursales",
     subtitle: "Presencia en las principales ciudades de Honduras para servirle mejor",
-    grassMaintenanceTitle: "Contactos Responsables de Mantenimiento de Grama",
+    grassMaintenanceTitle: undefined,
     grassPhones: [],
     grassImageUrl: undefined,
     ctaTitle: "¿Necesita asistencia inmediata?",
