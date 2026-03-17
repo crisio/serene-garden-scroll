@@ -19,6 +19,7 @@ export const Header = () => {
   const [title, setTitle] = useState("Jardines del Recuerdo");
   const [subtitle, setSubtitle] = useState("Más de 50 años de experiencia");
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
+  const [secondaryLogoUrl, setSecondaryLogoUrl] = useState<string | undefined>(undefined);
   const [menu, setMenu] = useState<BuiltNav[]>([]);
   const [socialMedia, setSocialMedia] = useState({
     facebook: "https://facebook.com/jardinesdelrecuerdo",
@@ -40,6 +41,7 @@ export const Header = () => {
         setTitle(hdr.title || "Jardines del Recuerdo");
         setSubtitle(hdr.subtitle || "Más de 50 años de experiencia");
         if (hdr.logoUrl) setLogoUrl(hdr.logoUrl);
+        setSecondaryLogoUrl(hdr.secondaryLogoUrl);
         
         setSocialMedia({
           facebook: hdr.facebookUrl || "https://facebook.com/jardinesdelrecuerdo",
@@ -161,7 +163,7 @@ export const Header = () => {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 smooth-transition bg-card/95 backdrop-blur-md elegant-shadow relative"
+      className="fixed top-0 left-0 right-0 z-50 smooth-transition bg-card/95 backdrop-blur-md elegant-shadow"
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
@@ -246,6 +248,13 @@ export const Header = () => {
               >
                 <WhatsAppIcon size={18} />
               </a>
+              {secondaryLogoUrl && (
+                <img
+                  src={secondaryLogoUrl}
+                  alt="Logo secundario"
+                  className="h-10 w-auto object-contain ml-1 pl-2 border-l border-border/80"
+                />
+              )}
             </div>
           </nav>
 
@@ -329,6 +338,13 @@ export const Header = () => {
                 >
                   <WhatsAppIcon size={20} />
                 </a>
+                {secondaryLogoUrl && (
+                  <img
+                    src={secondaryLogoUrl}
+                    alt="Logo secundario"
+                    className="h-10 w-auto object-contain ml-auto"
+                  />
+                )}
               </div>
               </nav>
             </div>

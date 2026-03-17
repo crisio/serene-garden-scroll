@@ -1,4 +1,5 @@
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { useForm, ValidationError } from "@formspree/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +18,7 @@ const iconMap: Record<string, any> = {
 
 export const ContactSection = () => {
   const normalizePhone = (value: string) => value.replace(/\D/g, "");
+  const [state, handleSubmit] = useForm("xgollwbe");
   const [contactData, setContactData] = useState<ContactSectionData>({
     title: "Contáctanos",
     subtitle: "Estamos aquí para apoyarlo cuando más nos necesite. Contáctenos en cualquier momento del día o la noche.",
@@ -122,44 +124,83 @@ export const ContactSection = () => {
                     {contactData.formTitle}
                   </h3>
                   
-                  <form className="space-y-6">
+                  {state.succeeded && (
+                    <div className="bg-green-500/20 border border-green-500 rounded-lg p-4 mb-6 text-green-100">
+                      <p className="font-semibold">¡Mensaje enviado con éxito!</p>
+                      <p className="text-sm mt-1">Gracias por contactarnos. Te responderemos pronto.</p>
+                    </div>
+                  )}
+                  
+                  <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-white/90 text-sm font-medium mb-2">
+                        <label htmlFor="nombre" className="block text-white/90 text-sm font-medium mb-2">
                           Nombre Completo
                         </label>
                         <Input 
+                          id="nombre"
+                          name="nombre_completo"
+                          required
                           placeholder="Su nombre"
                           className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                         />
+                        <ValidationError
+                          prefix="Nombre"
+                          field="nombre_completo"
+                          errors={state.errors}
+                          className="text-red-300 text-xs mt-1"
+                        />
                       </div>
                       <div>
-                        <label className="block text-white/90 text-sm font-medium mb-2">
+                        <label htmlFor="telefono" className="block text-white/90 text-sm font-medium mb-2">
                           Teléfono
                         </label>
                         <Input 
+                          id="telefono"
+                          name="telefono"
+                          type="tel"
+                          required
                           placeholder="Su teléfono"
                           className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        />
+                        <ValidationError
+                          prefix="Teléfono"
+                          field="telefono"
+                          errors={state.errors}
+                          className="text-red-300 text-xs mt-1"
                         />
                       </div>
                     </div>
                     
                     <div>
-                      <label className="block text-white/90 text-sm font-medium mb-2">
+                      <label htmlFor="email" className="block text-white/90 text-sm font-medium mb-2">
                         Correo Electrónico
                       </label>
                       <Input 
+                        id="email"
+                        name="email"
                         type="email"
+                        required
                         placeholder="su@email.com"
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                      />
+                      <ValidationError
+                        prefix="Correo"
+                        field="email"
+                        errors={state.errors}
+                        className="text-red-300 text-xs mt-1"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-white/90 text-sm font-medium mb-2">
+                      <label htmlFor="servicio" className="block text-white/90 text-sm font-medium mb-2">
                         Servicio de Interés
                       </label>
-                      <select className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white">
+                      <select 
+                        id="servicio"
+                        name="servicio_interes"
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white"
+                      >
                         <option value="" className="text-gray-800">Seleccione un servicio</option>
                         <option value="funeral" className="text-gray-800">Servicios Funerarios</option>
                         <option value="cemetery" className="text-gray-800">Cementerio</option>
@@ -169,22 +210,31 @@ export const ContactSection = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-white/90 text-sm font-medium mb-2">
+                      <label htmlFor="mensaje" className="block text-white/90 text-sm font-medium mb-2">
                         Mensaje
                       </label>
                       <Textarea 
+                        id="mensaje"
+                        name="mensaje"
                         placeholder="Cuéntenos cómo podemos ayudarle"
                         rows={4}
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                      />
+                      <ValidationError
+                        prefix="Mensaje"
+                        field="mensaje"
+                        errors={state.errors}
+                        className="text-red-300 text-xs mt-1"
                       />
                     </div>
                     
                     <Button 
                       type="submit"
+                      disabled={state.submitting}
                       size="lg"
                       className="w-full bg-primary-gold hover:bg-primary-gold/90 text-white font-semibold py-4"
                     >
-                      {contactData.formSubmitButtonText}
+                      {state.submitting ? "Enviando..." : contactData.formSubmitButtonText}
                     </Button>
                   </form>
                 </CardContent>

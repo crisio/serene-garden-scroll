@@ -1,13 +1,148 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type SyntheticEvent } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { ArrowLeft, Calendar, Clock, Share2, User, Phone } from "lucide-react";
-import { fetchBlogPost, fetchContactSection, fetchFloatingButtons, type BlogPost as BlogPostType } from "@/lib/strapi";
+import {
+  fetchBlogPost,
+  fetchFloatingButtons,
+  type BlogPost as BlogPostType,
+  type BlogSection,
+} from "@/lib/strapi";
+
+const normalizeStrapiBaseUrl = (rawUrl?: string) => {
+  const cleaned = (rawUrl ?? "http://localhost:1337").trim().replace(/\/+$/, "");
+  const normalized = cleaned.replace(/\/admin$/, "").replace(/\/api$/, "");
+  return normalized || "http://localhost:1337";
+};
+
+const STRAPI_BASE_URL = normalizeStrapiBaseUrl(import.meta.env.VITE_API_URL);
+
+const toAbsoluteMediaUrl = (url?: string | null) =>
+  !url ? "" : url.startsWith("http") ? url : `${STRAPI_BASE_URL}${url.startsWith("/") ? url : `/${url}`}`;
+
+const isVideoAsset = (mimeType?: string, url?: string) => {
+  if (mimeType?.toLowerCase().startsWith("video")) return true;
+  if (!url) return false;
+  return /\.(mp4|webm|ogg|mov|m4v|avi|mkv)$/i.test(url);
+};
+
+const getVideoAspectRatio = (videoWidth?: number, videoHeight?: number): number => {
+  // Prefer 9:16 as default when metadata is not available yet.
+  if (!videoWidth || !videoHeight) {
+    return 9 / 16;
+  }
+
+  return videoHeight >= videoWidth ? 9 / 16 : 16 / 9;
+};
+
+type AdaptiveVideoProps = {
+  src: string;
+  mimeType?: string;
+  poster?: string;
+  caption?: string;
+  controls?: boolean;
+  autoPlay?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+};
+
+const AdaptiveVideo = ({
+  src,
+  mimeType,
+  poster,
+  caption,
+  controls = true,
+  autoPlay = false,
+  muted = false,
+  loop = false,
+}: AdaptiveVideoProps) => {
+  const [ratio, setRatio] = useState<number>(9 / 16);
+  const [isPortrait, setIsPortrait] = useState<boolean>(true);
+
+  const handleLoadedMetadata = (event: SyntheticEvent<HTMLVideoElement>) => {
+    const element = event.currentTarget;
+    const nextRatio = getVideoAspectRatio(element.videoWidth, element.videoHeight);
+    setRatio(nextRatio);
+    setIsPortrait(nextRatio === 9 / 16);
+  };
+
+  return (
+    <figure className="not-prose my-8">
+      <div className={isPortrait ? "max-w-sm mx-auto" : "w-full"}>
+        <AspectRatio ratio={ratio} className="overflow-hidden rounded-lg bg-black">
+          <video
+            className="w-full h-full object-cover"
+            controls={controls}
+            autoPlay={autoPlay}
+            muted={autoPlay ? true : muted}
+            loop={loop}
+            playsInline
+            preload="metadata"
+            poster={poster}
+            onLoadedMetadata={handleLoadedMetadata}
+          >
+            <source src={src} type={mimeType || undefined} />
+            Tu navegador no soporta reproducir este video.
+          </video>
+        </AspectRatio>
+      </div>
+      {caption && (
+        <figcaption className="mt-2 text-sm text-slate-500 text-center">{caption}</figcaption>
+      )}
+    </figure>
+  );
+};
+
+const toTrustedEmbedUrl = (rawUrl: string, autoplay = false): string | null => {
+  try {
+    const parsed = new URL(rawUrl);
+    const host = parsed.hostname.toLowerCase();
+
+    if (["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].includes(host)) {
+      let videoId = "";
+
+      if (host === "youtu.be") {
+        videoId = parsed.pathname.split("/").filter(Boolean)[0] || "";
+      } else if (parsed.pathname === "/watch") {
+        videoId = parsed.searchParams.get("v") || "";
+      } else {
+        const segments = parsed.pathname.split("/").filter(Boolean);
+        if (segments[0] === "embed" && segments[1]) videoId = segments[1];
+        if (segments[0] === "shorts" && segments[1]) videoId = segments[1];
+      }
+
+      if (!videoId) return null;
+      const query = autoplay ? "?autoplay=1&mute=1" : "";
+      return `https://www.youtube.com/embed/${videoId}${query}`;
+    }
+
+    if (["vimeo.com", "www.vimeo.com", "player.vimeo.com"].includes(host)) {
+      const segments = parsed.pathname.split("/").filter(Boolean);
+      let videoId = segments.find((segment) => /^\d+$/.test(segment)) || "";
+
+      if (!videoId && host === "player.vimeo.com") {
+        const videoIndex = segments.findIndex((segment) => segment === "video");
+        if (videoIndex >= 0 && segments[videoIndex + 1]) {
+          videoId = segments[videoIndex + 1];
+        }
+      }
+
+      if (!videoId) return null;
+      const query = autoplay ? "?autoplay=1" : "";
+      return `https://player.vimeo.com/video/${videoId}${query}`;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
 
 // Helper function to render Strapi Blocks
-function renderBlocks(blocks: any[]): JSX.Element[] {
+function renderBlocks(blocks: any[]): React.ReactNode[] {
   if (!Array.isArray(blocks)) return [];
   
   return blocks.map((block, index) => {
@@ -46,15 +181,19 @@ function renderBlocks(blocks: any[]): JSX.Element[] {
             <code>{renderChildren(block.children)}</code>
           </pre>
         );
-      case 'image':
+      case 'image': {
+        const blockImageUrl = toAbsoluteMediaUrl(block.image?.url);
+        if (!blockImageUrl) return null;
+
         return (
           <img
             key={index}
-            src={block.image.url}
+            src={blockImageUrl}
             alt={block.image.alternativeText || ''}
             className="rounded-lg my-4"
           />
         );
+      }
       default:
         return <div key={index}>{renderChildren(block.children)}</div>;
     }
@@ -87,6 +226,122 @@ function renderChildren(children: any[]): React.ReactNode {
     
     return null;
   });
+}
+
+function renderSection(section: BlogSection, index: number): JSX.Element | null {
+  const sectionKey = `${section.__component}-${section.id}-${index}`;
+
+  if (section.__component === "blog-post.rich-text-section") {
+    if (!section.body.length) return null;
+
+    return (
+      <div key={sectionKey} className="prose prose-slate max-w-none prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-primary prose-strong:text-slate-900 prose-img:rounded-lg">
+        {renderBlocks(section.body)}
+      </div>
+    );
+  }
+
+  if (section.__component === "blog-post.image-section") {
+    if (!section.imageUrl) return null;
+
+    return (
+      <figure key={sectionKey} className="not-prose my-8">
+        <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg bg-slate-100">
+          <img
+            src={section.imageUrl}
+            alt={section.alt || "Imagen del artículo"}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        </AspectRatio>
+        {section.caption && (
+          <figcaption className="mt-2 text-sm text-slate-500 text-center">{section.caption}</figcaption>
+        )}
+      </figure>
+    );
+  }
+
+  if (section.__component === "blog-post.video-upload-section") {
+    if (!section.videoUrl) return null;
+
+    return (
+      <AdaptiveVideo
+        key={sectionKey}
+        src={section.videoUrl}
+        mimeType={section.videoMimeType}
+        poster={section.posterUrl}
+        caption={section.caption}
+        controls={section.controls}
+        autoPlay={section.autoplay}
+        muted={section.muted}
+        loop={section.loop}
+      />
+    );
+  }
+
+  if (section.__component === "blog-post.video-embed-section") {
+    const embedUrl = toTrustedEmbedUrl(section.url, section.autoplay);
+    if (!embedUrl) return null;
+
+    return (
+      <figure key={sectionKey} className="not-prose my-8">
+        <AspectRatio ratio={16 / 9} className="overflow-hidden rounded-lg bg-black">
+          <iframe
+            src={embedUrl}
+            title={section.title || "Video del artículo"}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
+        </AspectRatio>
+        {section.caption && (
+          <figcaption className="mt-2 text-sm text-slate-500 text-center">{section.caption}</figcaption>
+        )}
+      </figure>
+    );
+  }
+
+  if (section.__component === "blog-post.cta-section") {
+    const target = section.openInNewTab ? "_blank" : undefined;
+    const rel = section.openInNewTab ? "noopener noreferrer" : undefined;
+
+    return (
+      <aside key={sectionKey} className="not-prose my-8 p-6 rounded-lg border border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5">
+        {section.title && <h3 className="text-2xl font-bold text-slate-900 mb-2">{section.title}</h3>}
+        {section.description && <p className="text-slate-600 mb-4">{section.description}</p>}
+        <Button asChild className="bg-primary hover:bg-primary/90 text-white">
+          <a href={section.buttonUrl} target={target} rel={rel}>
+            {section.buttonLabel}
+          </a>
+        </Button>
+      </aside>
+    );
+  }
+
+  return null;
+}
+
+function renderLegacyVideos(videos: BlogPostType["legacyVideos"]): JSX.Element | null {
+  const videoAssets = videos.filter((video) => isVideoAsset(video.mimeType, video.url));
+
+  if (videoAssets.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-8">
+      {videoAssets.map((video, index) => (
+        <AdaptiveVideo
+          key={`${video.url}-${index}`}
+          src={video.url}
+          mimeType={video.mimeType}
+          caption={video.name}
+          controls
+        />
+      ))}
+    </div>
+  );
 }
 
 export default function BlogPost() {
@@ -214,6 +469,17 @@ export default function BlogPost() {
     day: 'numeric'
   });
 
+  const featuredIsVideo = isVideoAsset(post.featuredImageMimeType, post.featuredImageUrl);
+  const hasSections = post.sections.length > 0;
+  const hasRichTextSection = post.sections.some(
+    (section) => section.__component === "blog-post.rich-text-section"
+  );
+  const hasInlineVideoSection = post.sections.some(
+    (section) =>
+      section.__component === "blog-post.video-upload-section" ||
+      section.__component === "blog-post.video-embed-section"
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
@@ -230,14 +496,23 @@ export default function BlogPost() {
 
           {/* Article Container */}
           <article className="bg-white rounded-lg shadow-sm overflow-hidden">
-            {/* Featured Image */}
+            {/* Featured Media */}
             {post.featuredImageUrl && (
-              <div className="relative h-96 md:h-[500px] overflow-hidden">
-                <img
-                  src={post.featuredImageUrl}
-                  alt={post.title}
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative overflow-hidden bg-slate-100">
+                <AspectRatio ratio={16 / 9}>
+                  {featuredIsVideo ? (
+                    <video className="w-full h-full object-cover" controls preload="metadata">
+                      <source src={post.featuredImageUrl} type={post.featuredImageMimeType || undefined} />
+                      Tu navegador no soporta reproducir este video.
+                    </video>
+                  ) : (
+                    <img
+                      src={post.featuredImageUrl}
+                      alt={post.featuredImageAlt || post.title}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </AspectRatio>
               </div>
             )}
 
@@ -290,9 +565,24 @@ export default function BlogPost() {
                 </div>
               )}
 
-              {/* Rich Text Content */}
-              <div className="prose prose-slate max-w-none prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-primary prose-strong:text-slate-900 prose-img:rounded-lg">
-                {renderBlocks(post.content)}
+              {/* Interactive Content */}
+              <div className="space-y-6">
+                {hasSections ? (
+                  <>
+                    {post.sections.map((section, index) => renderSection(section, index))}
+                    {!hasRichTextSection && post.content.length > 0 && (
+                      <div className="prose prose-slate max-w-none prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-primary prose-strong:text-slate-900 prose-img:rounded-lg">
+                        {renderBlocks(post.content)}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="prose prose-slate max-w-none prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-primary prose-strong:text-slate-900 prose-img:rounded-lg">
+                    {renderBlocks(post.content)}
+                  </div>
+                )}
+
+                {!hasInlineVideoSection && renderLegacyVideos(post.legacyVideos)}
               </div>
 
               {/* CTA - Llamar a un Asesor */}

@@ -299,7 +299,7 @@ export default function ObituaryPost() {
                     <div className="flex items-start gap-3">
                       <Clock className="h-5 w-5 text-primary mt-1" />
                       <div>
-                        <p className="font-semibold text-slate-900">Ceremonia</p>
+                        <p className="font-semibold text-slate-900">Lugar de velación</p>
                         <p className="text-slate-600">{ceremonyDateFormatted}</p>
                       </div>
                     </div>
@@ -308,7 +308,7 @@ export default function ObituaryPost() {
                     <div className="flex items-start gap-3">
                       <MapPin className="h-5 w-5 text-primary mt-1" />
                       <div>
-                        <p className="font-semibold text-slate-900">Ubicación</p>
+                        <p className="font-semibold text-slate-900">Lugar de sepelio</p>
                         <p className="text-slate-600">{obituary.ceremonyLocation}</p>
                       </div>
                     </div>
@@ -317,7 +317,7 @@ export default function ObituaryPost() {
                     <div className="flex items-start gap-3">
                       <User className="h-5 w-5 text-primary mt-1" />
                       <div>
-                        <p className="font-semibold text-slate-900">Funeraria</p>
+                        <p className="font-semibold text-slate-900">Misa</p>
                         <p className="text-slate-600">{obituary.funeralHome}</p>
                       </div>
                     </div>

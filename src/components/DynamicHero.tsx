@@ -37,6 +37,13 @@ export const DynamicHero = () => {
     queryKey: ["hero-slides"],
     queryFn: () => strapiApi.getHeroSlides(),
     staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: (failureCount, err) => {
+      if (err instanceof Error && /401|unauthorized/i.test(err.message)) {
+        return false;
+      }
+      return failureCount < 1;
+    },
   });
 
   // Hooks must not be conditional: declare them before any early return

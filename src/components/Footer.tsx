@@ -2,14 +2,18 @@ import { useState, useEffect } from "react";
 import { Heart, Phone, Mail, MapPin } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { scrollToSection as scrollToSectionUtil } from "@/lib/scrollUtils";
-import { fetchFooter, type FooterData } from "@/lib/strapi";
+import { fetchFooter, fetchSiteHeader, type FooterData } from "@/lib/strapi";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [footerData, setFooterData] = useState<FooterData | null>(null);
+  const [secondaryLogoUrl, setSecondaryLogoUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    fetchFooter().then(setFooterData);
+    Promise.all([fetchFooter(), fetchSiteHeader()]).then(([footer, header]) => {
+      setFooterData(footer);
+      setSecondaryLogoUrl(header.secondaryLogoUrl);
+    });
   }, []);
 
   const handleScrollToSection = (sectionId: string) => {
@@ -95,6 +99,25 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Section */}
+        {secondaryLogoUrl && (
+          <div className="mb-4 flex justify-end">
+            <div className="flex flex-row items-center justify-end gap-3">
+              <img
+                src={secondaryLogoUrl}
+                alt="Asociación Gremial Latinoamericana de Cementerios y Servicios Funerarios"
+                className="h-12 md:h-14 w-auto object-contain"
+              />
+              <p
+                className="text-white/80 text-xs md:text-sm text-center leading-snug max-w-lg font-normal"
+                style={{ fontFamily: '"Times New Roman", Times, serif' }}
+              >
+                Asociación Gremial Latinoamericana de
+                <br />
+                Cementerios y Servicios Funerarios.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="border-t border-white/20 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-white/70 text-sm">

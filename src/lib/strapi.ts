@@ -1,13 +1,21 @@
 // Strapi client for site-header and slogan Single Types
 // Supports Strapi v4 (data.attributes) and v5 (data flat)
-// If 403: Enable Public → find for site-header and slogan OR set VITE_STRAPI_TOKEN (API Token)
+// If 403: Enable Public → find for content types OR set VITE_API_TOKEN (VITE_STRAPI_TOKEN legacy)
 // Test: curl "http://localhost:1337/api/site-header?populate=logo,navitem"
 
-const BASE = (import.meta.env.VITE_STRAPI_URL || "http://localhost:1337").replace(/\/$/, "");
-const TOKEN = (import.meta.env.VITE_STRAPI_TOKEN || "").trim();
+const normalizeStrapiBaseUrl = (rawUrl?: string) => {
+  const cleaned = (rawUrl ?? "http://localhost:1337").trim().replace(/\/+$/, "");
+  const normalized = cleaned.replace(/\/admin$/, "").replace(/\/api$/, "");
+  return normalized || "http://localhost:1337";
+};
+
+const API_URL = normalizeStrapiBaseUrl(import.meta.env.VITE_API_URL);
+const TOKEN = (
+  import.meta.env.VITE_API_TOKEN ?? import.meta.env.VITE_STRAPI_TOKEN ?? ""
+).trim();
 
 async function sget<T>(path: string, params?: Record<string, any>): Promise<T> {
-  const url = new URL(`${BASE}${path}`);
+  const url = new URL(`${API_URL}${path}`);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       if (typeof v === 'object' && v !== null) {
@@ -24,9 +32,11 @@ async function sget<T>(path: string, params?: Record<string, any>): Promise<T> {
   return res.json();
 }
 
+const toAbsoluteUrl = (url?: string | null) =>
+  !url ? undefined : url.startsWith("http") ? url : `${API_URL}${url.startsWith("/") ? url : `/${url}`}`;
+
 function mediaUrl(u?: string) {
-  if (!u) return undefined;
-  return u.startsWith("http") ? u : `${BASE}${u}`;
+  return toAbsoluteUrl(u);
 }
 
 // ========== CITIES ==========
@@ -81,6 +91,7 @@ export type SiteHeaderData = {
   title: string;
   subtitle: string;
   logoUrl?: string;
+  secondaryLogoUrl?: string;
   navItems: NavItem[];
   facebookUrl?: string;
   instagramUrl?: string;
@@ -113,7 +124,7 @@ export async function fetchCities(): Promise<City[]> {
  */
 export async function fetchServices(citySlug?: string): Promise<Service[]> {
   try {
-    const url = new URL(`${BASE}/api/services`);
+    const url = new URL(`${API_URL}/api/services`);
     url.searchParams.append("populate[0]", "gallery");
     url.searchParams.append("populate[1]", "cityservice.cities");
     url.searchParams.append("populate[2]", "cityservice.features");
@@ -192,7 +203,7 @@ export async function fetchServices(citySlug?: string): Promise<Service[]> {
  */
 export async function fetchServiceBySlug(slug: string): Promise<Service | null> {
   try {
-    const url = new URL(`${BASE}/api/services`);
+    const url = new URL(`${API_URL}/api/services`);
     url.searchParams.append("filters[slug][$eq]", slug);
     url.searchParams.append("populate[0]", "gallery");
     url.searchParams.append("populate[1]", "cityservice.cities");
@@ -271,8 +282,27 @@ export async function fetchSiteHeader(): Promise<SiteHeaderData> {
 
     console.log("Raw Strapi data:", data);
 
+    const getMediaFieldUrl = (field: any): string | undefined => {
+      if (!field) return undefined;
+
+      if (Array.isArray(field)) {
+        return mediaUrl(field[0]?.url);
+      }
+
+      const rawNode = field?.data ?? field;
+
+      if (Array.isArray(rawNode)) {
+        const first = rawNode[0]?.attributes ?? rawNode[0];
+        return mediaUrl(first?.url);
+      }
+
+      const node = rawNode?.attributes ?? rawNode;
+      return mediaUrl(node?.url);
+    };
+
     // logo: multiple media → take first
-    const logoUrl = mediaUrl(data?.logo?.[0]?.url);
+    const logoUrl = getMediaFieldUrl(data?.logo);
+    const secondaryLogoUrl = getMediaFieldUrl(data?.secundarylogo);
     console.log("Logo URL:", logoUrl);
 
     // nav items with normalization
@@ -298,6 +328,7 @@ export async function fetchSiteHeader(): Promise<SiteHeaderData> {
       title: data?.title ?? "Jardines del Recuerdo",
       subtitle: data?.subtitle ?? "Más de 50 años de experiencia",
       logoUrl,
+      secondaryLogoUrl,
       navItems: nav,
       facebookUrl: data?.facebookUrl || "https://facebook.com/jardinesdelrecuerdo",
       instagramUrl: data?.instagramUrl || "https://instagram.com/jardinesdelrecuerdo",
@@ -309,6 +340,7 @@ export async function fetchSiteHeader(): Promise<SiteHeaderData> {
       title: "Jardines del Recuerdo",
       subtitle: "Más de 50 años de experiencia",
       logoUrl: undefined,
+      secondaryLogoUrl: undefined,
       navItems: [],
       facebookUrl: "https://facebook.com/jardinesdelrecuerdo",
       instagramUrl: "https://instagram.com/jardinesdelrecuerdo",
@@ -402,7 +434,7 @@ export async function fetchLocationsPage(): Promise<LocationsPageData> {
     const data = json?.data?.attributes ?? json?.data ?? {};
     
     // Extract grass image URL
-    const grassImageUrl = mediaUrl(
+    const grassImageUrl = toAbsoluteUrl(
       data?.grassImage?.data?.attributes?.url ?? data?.grassImage?.url
     );
     
@@ -480,7 +512,7 @@ export type AboutSectionData = {
 export async function fetchAboutSection(): Promise<AboutSectionData> {
   try {
     // Build manual URL with nested populate
-    const url = new URL(`${BASE}/api/about-section`);
+    const url = new URL(`${API_URL}/api/about-section`);
     url.searchParams.append("populate[value]", "*");
     url.searchParams.append("populate[legacysection][populate][serviceitems]", "*");
     url.searchParams.append("populate[legacysection][populate][missionvision]", "*");
@@ -874,14 +906,78 @@ export type BlogPost = {
   title: string;
   slug: string;
   excerpt: string;
-  content: any; // Rich text blocks
+  content: any[]; // Legacy rich text blocks
+  sections: BlogSection[];
   publishedDate: string;
   readTime: number;
   isPublished: boolean;
   author: string;
   category?: BlogCategory;
   featuredImageUrl?: string;
+  featuredImageMimeType?: string;
+  featuredImageAlt?: string;
+  legacyVideos: BlogMediaAsset[];
 };
+
+export type BlogMediaAsset = {
+  url: string;
+  mimeType?: string;
+  alternativeText?: string;
+  name?: string;
+};
+
+export type BlogSectionRichText = {
+  id: number;
+  __component: "blog-post.rich-text-section";
+  body: any[];
+};
+
+export type BlogSectionImage = {
+  id: number;
+  __component: "blog-post.image-section";
+  imageUrl?: string;
+  alt?: string;
+  caption?: string;
+};
+
+export type BlogSectionVideoUpload = {
+  id: number;
+  __component: "blog-post.video-upload-section";
+  videoUrl?: string;
+  videoMimeType?: string;
+  posterUrl?: string;
+  caption?: string;
+  controls: boolean;
+  autoplay: boolean;
+  muted: boolean;
+  loop: boolean;
+};
+
+export type BlogSectionVideoEmbed = {
+  id: number;
+  __component: "blog-post.video-embed-section";
+  url: string;
+  title?: string;
+  caption?: string;
+  autoplay: boolean;
+};
+
+export type BlogSectionCta = {
+  id: number;
+  __component: "blog-post.cta-section";
+  title?: string;
+  description?: string;
+  buttonLabel: string;
+  buttonUrl: string;
+  openInNewTab: boolean;
+};
+
+export type BlogSection =
+  | BlogSectionRichText
+  | BlogSectionImage
+  | BlogSectionVideoUpload
+  | BlogSectionVideoEmbed
+  | BlogSectionCta;
 
 // ========== FLOATING BUTTONS ==========
 export type FloatingButton = {
@@ -985,6 +1081,174 @@ export async function fetchFloatingButtons(): Promise<FloatingButtonsData> {
   }
 }
 
+const BLOG_POST_POPULATE_PARAMS: Record<string, string> = {
+  "populate[0]": "blog_category",
+  "populate[1]": "featuredImage",
+  "populate[2]": "videospost",
+  "populate[3]": "sections",
+  "populate[4]": "sections.image",
+  "populate[5]": "sections.video",
+  "populate[6]": "sections.poster",
+};
+
+const normalizeRelationEntity = (relation: any) => {
+  const node = relation?.data ?? relation;
+  if (!node) return undefined;
+  const attrs = node?.attributes ?? node;
+  const id = node?.id ?? attrs?.id;
+
+  return {
+    id,
+    ...attrs,
+  };
+};
+
+const extractMediaNodes = (media: any): any[] => {
+  if (!media) return [];
+
+  const rawNode = media?.data ?? media;
+  const rawArray = Array.isArray(rawNode) ? rawNode : [rawNode];
+
+  return rawArray
+    .map((node) => node?.attributes ?? node)
+    .filter((node) => Boolean(node?.url));
+};
+
+const mapMediaAsset = (media: any): BlogMediaAsset | undefined => {
+  const first = extractMediaNodes(media)[0];
+  if (!first?.url) return undefined;
+
+  return {
+    url: mediaUrl(first.url) || "",
+    mimeType: first.mime ?? first.mimeType ?? undefined,
+    alternativeText: first.alternativeText ?? undefined,
+    name: first.name ?? undefined,
+  };
+};
+
+const mapMediaAssets = (media: any): BlogMediaAsset[] =>
+  extractMediaNodes(media)
+    .map((item) => ({
+      url: mediaUrl(item.url) || "",
+      mimeType: item.mime ?? item.mimeType ?? undefined,
+      alternativeText: item.alternativeText ?? undefined,
+      name: item.name ?? undefined,
+    }))
+    .filter((item) => Boolean(item.url));
+
+const mapBlogSection = (section: any): BlogSection | null => {
+  const component = section?.__component;
+  const id = section?.id ?? 0;
+
+  if (component === "blog-post.rich-text-section") {
+    return {
+      id,
+      __component: component,
+      body: Array.isArray(section?.body) ? section.body : [],
+    };
+  }
+
+  if (component === "blog-post.image-section") {
+    const image = mapMediaAsset(section?.image);
+    return {
+      id,
+      __component: component,
+      imageUrl: image?.url,
+      alt: section?.alt ?? image?.alternativeText ?? undefined,
+      caption: section?.caption ?? undefined,
+    };
+  }
+
+  if (component === "blog-post.video-upload-section") {
+    const video = mapMediaAsset(section?.video);
+    const poster = mapMediaAsset(section?.poster);
+
+    return {
+      id,
+      __component: component,
+      videoUrl: video?.url,
+      videoMimeType: video?.mimeType,
+      posterUrl: poster?.url,
+      caption: section?.caption ?? undefined,
+      controls: section?.controls !== false,
+      autoplay: Boolean(section?.autoplay),
+      muted: section?.muted !== false,
+      loop: Boolean(section?.loop),
+    };
+  }
+
+  if (component === "blog-post.video-embed-section") {
+    if (!section?.url) {
+      return null;
+    }
+
+    return {
+      id,
+      __component: component,
+      url: String(section.url),
+      title: section?.title ?? undefined,
+      caption: section?.caption ?? undefined,
+      autoplay: Boolean(section?.autoplay),
+    };
+  }
+
+  if (component === "blog-post.cta-section") {
+    if (!section?.buttonLabel || !section?.buttonUrl) {
+      return null;
+    }
+
+    return {
+      id,
+      __component: component,
+      title: section?.title ?? undefined,
+      description: section?.description ?? undefined,
+      buttonLabel: String(section.buttonLabel),
+      buttonUrl: String(section.buttonUrl),
+      openInNewTab: Boolean(section?.openInNewTab),
+    };
+  }
+
+  return null;
+};
+
+const mapBlogPost = (post: any): BlogPost => {
+  const categoryNode = normalizeRelationEntity(post?.blog_category);
+  const category: BlogCategory | undefined = categoryNode
+    ? {
+        id: categoryNode.id,
+        name: categoryNode.name || "",
+        slug: categoryNode.slug || "",
+        description: categoryNode.description || undefined,
+        color: categoryNode.color || undefined,
+      }
+    : undefined;
+
+  const featuredAsset = mapMediaAsset(post?.featuredImage);
+  const sections = Array.isArray(post?.sections)
+    ? post.sections
+        .map((section: any) => mapBlogSection(section))
+        .filter((section: BlogSection | null): section is BlogSection => Boolean(section))
+    : [];
+
+  return {
+    id: post?.id,
+    title: post?.title || "",
+    slug: post?.slug || "",
+    excerpt: post?.excerpt || "",
+    content: Array.isArray(post?.content) ? post.content : [],
+    sections,
+    publishedDate: post?.publishedDate || "",
+    readTime: post?.readTime || 5,
+    isPublished: post?.isPublished || false,
+    author: post?.author || "Jardines del Recuerdo",
+    category,
+    featuredImageUrl: featuredAsset?.url,
+    featuredImageMimeType: featuredAsset?.mimeType,
+    featuredImageAlt: featuredAsset?.alternativeText,
+    legacyVideos: mapMediaAssets(post?.videospost),
+  };
+};
+
 export async function fetchBlogCategories(): Promise<BlogCategory[]> {
   try {
     const res = await sget<any>("/api/blog-categories", {
@@ -1013,7 +1277,7 @@ export async function fetchBlogPosts(options?: {
 }): Promise<{ posts: BlogPost[]; total: number }> {
   try {
     const params: any = {
-      populate: "*",
+      ...BLOG_POST_POPULATE_PARAMS,
       sort: "publishedDate:desc",
       "filters[isPublished][$eq]": true,
     };
@@ -1033,38 +1297,7 @@ export async function fetchBlogPosts(options?: {
     const meta = res.meta || {};
     
     console.log("Raw blog posts data:", rawPosts);
-
-    const posts: BlogPost[] = rawPosts.map((post: any) => {
-      let category: BlogCategory | undefined;
-      if (post.blog_category) {
-        category = {
-          id: post.blog_category.id,
-          name: post.blog_category.name || "",
-          slug: post.blog_category.slug || "",
-          description: post.blog_category.description,
-          color: post.blog_category.color,
-        };
-      }
-
-      let featuredImageUrl: string | undefined;
-      if (post.featuredImage) {
-        featuredImageUrl = mediaUrl(post.featuredImage.url);
-      }
-
-      return {
-        id: post.id,
-        title: post.title || "",
-        slug: post.slug || "",
-        excerpt: post.excerpt || "",
-        content: post.content || [],
-        publishedDate: post.publishedDate || "",
-        readTime: post.readTime || 5,
-        isPublished: post.isPublished || false,
-        author: post.author || "Jardines del Recuerdo",
-        category,
-        featuredImageUrl,
-      };
-    });
+    const posts: BlogPost[] = rawPosts.map((post: any) => mapBlogPost(post));
 
     return {
       posts,
@@ -1079,7 +1312,7 @@ export async function fetchBlogPosts(options?: {
 export async function fetchBlogPost(slug: string): Promise<BlogPost | null> {
   try {
     const res = await sget<any>("/api/blog-posts", {
-      populate: "*",
+      ...BLOG_POST_POPULATE_PARAMS,
       "filters[slug][$eq]": slug,
       "filters[isPublished][$eq]": true,
     });
@@ -1093,36 +1326,7 @@ export async function fetchBlogPost(slug: string): Promise<BlogPost | null> {
     const post = rawPosts[0];
     
     console.log("Raw blog post data:", post);
-
-    let category: BlogCategory | undefined;
-    if (post.blog_category) {
-      category = {
-        id: post.blog_category.id,
-        name: post.blog_category.name || "",
-        slug: post.blog_category.slug || "",
-        description: post.blog_category.description,
-        color: post.blog_category.color,
-      };
-    }
-
-    let featuredImageUrl: string | undefined;
-    if (post.featuredImage) {
-      featuredImageUrl = mediaUrl(post.featuredImage.url);
-    }
-
-    return {
-      id: post.id,
-      title: post.title || "",
-      slug: post.slug || "",
-      excerpt: post.excerpt || "",
-      content: post.content || [],
-      publishedDate: post.publishedDate || "",
-      readTime: post.readTime || 5,
-      isPublished: post.isPublished || false,
-      author: post.author || "Jardines del Recuerdo",
-      category,
-      featuredImageUrl,
-    };
+    return mapBlogPost(post);
   } catch (err) {
     console.error("Error fetching blog post:", err);
     return null;
@@ -1308,7 +1512,7 @@ export async function fetchFloreria(): Promise<FloreriaData> {
   try {
     console.log("Fetching floreria from Strapi...");
     // Para traer relaciones anidadas en arrays, necesitamos pasar populate correctamente
-    const url = new URL(`${BASE}/api/floreria`);
+    const url = new URL(`${API_URL}/api/floreria`);
     url.searchParams.append("populate", "heroImage");
     url.searchParams.append("populate", "finalImage");
     url.searchParams.append("populate", "features");

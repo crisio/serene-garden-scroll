@@ -19,8 +19,18 @@ export const PreventionDialog = ({ isOpen, onClose }: PreventionDialogProps) => 
   const [preverPhones, setPreverPhones] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchFloatingButtons().then((data) => {
-      if (data?.buttons) {
+    if (!isOpen) {
+      return;
+    }
+
+    let isMounted = true;
+
+    fetchFloatingButtons()
+      .then((data) => {
+        if (!isMounted || !data?.buttons) {
+          return;
+        }
+
         const preverButton = data.buttons.find((btn: any) => btn.label === "PREVER");
         if (preverButton?.phoneNumbers && Array.isArray(preverButton.phoneNumbers)) {
           const phones = preverButton.phoneNumbers.map((item: any) => ({
@@ -30,9 +40,15 @@ export const PreventionDialog = ({ isOpen, onClose }: PreventionDialogProps) => 
           }));
           setPreverPhones(phones);
         }
-      }
-    });
-  }, []);
+      })
+      .catch((error) => {
+        console.error("Error loading prevention phones:", error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   const handleWhatsApp = () => {
     const mensaje = "Hola, me interesa información sobre planes de previsión para proteger a mi familia";

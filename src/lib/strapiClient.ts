@@ -129,14 +129,21 @@ export interface StrapiFetchOptions {
   init?: RequestInit;
 }
 
+const normalizeStrapiBaseUrl = (rawUrl?: string): string => {
+  const cleaned = (rawUrl ?? 'http://localhost:1337').trim().replace(/\/+$/, '');
+  const normalized = cleaned.replace(/\/admin$/, '').replace(/\/api$/, '');
+  return normalized || 'http://localhost:1337';
+};
+
 // Get API URL from environment variables
 const getAPIUrl = (): string => {
-  return import.meta.env.VITE_API_URL;
+  return `${normalizeStrapiBaseUrl(import.meta.env.VITE_API_URL)}/api`;
 };
 
 // Get API token from environment variables
 const getAPIToken = (): string | undefined => {
-  return import.meta.env.VITE_API_TOKEN;
+  const token = (import.meta.env.VITE_API_TOKEN ?? import.meta.env.VITE_STRAPI_TOKEN ?? '').trim();
+  return token || undefined;
 };
 
 // Convert media URL to absolute URL
@@ -149,7 +156,7 @@ export const mediaUrl = (url: string): string => {
   }
   
   // Handle Strapi uploads - remove /api from the path and concatenate with base URL
-  const baseUrl = getAPIUrl().replace('/api', '');
+  const baseUrl = getAPIUrl().replace(/\/api$/, '');
   
   // Ensure url starts with /
   const cleanUrl = url.startsWith('/') ? url : `/${url}`;

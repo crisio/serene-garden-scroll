@@ -11,6 +11,63 @@ import { fetchBlogPosts, fetchBlogCategories, fetchSiteHeader, type BlogPost, ty
 const POSTS_PER_PAGE = 6;
 const defaultLogo = "/lovable-uploads/07568c23-c994-4213-83cf-06bea56fbc27.png";
 
+const extractTextFromChildren = (children: any[]): string => {
+  if (!Array.isArray(children)) return "";
+
+  return children
+    .map((child) => {
+      if (!child) return "";
+      if (child.type === "text") return child.text || "";
+      if (Array.isArray(child.children)) return extractTextFromChildren(child.children);
+      return "";
+    })
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const extractTextFromBlocks = (blocks: any[]): string => {
+  if (!Array.isArray(blocks)) return "";
+
+  return blocks
+    .map((block) => {
+      if (!block) return "";
+
+      if (Array.isArray(block.children)) {
+        return extractTextFromChildren(block.children);
+      }
+
+      if (Array.isArray(block.body)) {
+        return extractTextFromBlocks(block.body);
+      }
+
+      return "";
+    })
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const getPostSummary = (post: BlogPost, maxLength = 180): string => {
+  const explicitExcerpt = post.excerpt?.trim();
+  if (explicitExcerpt) return explicitExcerpt;
+
+  const sectionText = post.sections
+    .filter((section) => section.__component === "blog-post.rich-text-section")
+    .map((section) => extractTextFromBlocks(section.body))
+    .join(" ")
+    .trim();
+
+  const contentText = extractTextFromBlocks(post.content);
+  const rawSummary = (sectionText || contentText || "Artículo disponible en nuestro blog").replace(/\s+/g, " ").trim();
+
+  if (rawSummary.length <= maxLength) {
+    return rawSummary;
+  }
+
+  return `${rawSummary.slice(0, maxLength).trim()}...`;
+};
+
 export default function Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -49,7 +106,7 @@ export default function Blog() {
       const lowerSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(post =>
         post.title.toLowerCase().includes(lowerSearch) ||
-        post.excerpt.toLowerCase().includes(lowerSearch) ||
+        getPostSummary(post).toLowerCase().includes(lowerSearch) ||
         post.author.toLowerCase().includes(lowerSearch)
       );
     }
@@ -247,6 +304,8 @@ interface PostCardProps {
 }
 
 function PostCard({ post }: PostCardProps) {
+  const summary = getPostSummary(post);
+
   // Format date
   const publishedDate = new Date(post.publishedDate).toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -284,9 +343,9 @@ function PostCard({ post }: PostCardProps) {
             {post.title}
           </CardTitle>
           
-          {post.excerpt && (
+          {summary && (
             <CardDescription className="line-clamp-3">
-              {post.excerpt}
+              {summary}
             </CardDescription>
           )}
         </CardHeader>

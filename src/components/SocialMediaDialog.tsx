@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Facebook, Instagram, MessageCircle, Mail, Phone } from "lucide-react";
+import { useEffect, useState } from "react";
+import { fetchContactSection, fetchSiteHeader } from "@/lib/strapi";
 
 interface SocialMediaDialogProps {
   isOpen: boolean;
@@ -14,46 +16,108 @@ interface SocialMediaDialogProps {
 }
 
 export const SocialMediaDialog = ({ isOpen, onClose }: SocialMediaDialogProps) => {
+  const [facebookUrl, setFacebookUrl] = useState("https://facebook.com/jardinesdelrecuerdo");
+  const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/50425567400");
+  const [instagramUrl, setInstagramUrl] = useState("https://instagram.com/jardinesdelrecuerdo");
+  const [emailAddress, setEmailAddress] = useState("info@funeralesdelnorte.com");
+  const [phoneTarget] = useState("https://wa.me/50425024330?text=Hola,%20quisiera%20información%20sobre%20prever%20y%20otras%20gestiones");
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const extractFirstEmail = (value: string) => {
+      const match = value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+      return match?.[0]?.toLowerCase();
+    };
+
+    const loadContactData = async () => {
+      try {
+        const [headerData, contactData] = await Promise.all([
+          fetchSiteHeader(),
+          fetchContactSection(),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (headerData.instagramUrl) {
+          setInstagramUrl(headerData.instagramUrl);
+        }
+        if (headerData.facebookUrl) {
+          setFacebookUrl(headerData.facebookUrl);
+        }
+        if (headerData.whatsappNumber) {
+          setWhatsappUrl(`https://wa.me/${headerData.whatsappNumber}`);
+        }
+
+        const firstEmail = contactData.contactinfo
+          .map((item) => extractFirstEmail(item.info))
+          .find((email): email is string => Boolean(email));
+
+        if (firstEmail) {
+          setEmailAddress(firstEmail);
+        }
+      } catch (error) {
+        console.error("Error loading SocialMediaDialog data:", error);
+      }
+    };
+
+    loadContactData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
   const socialLinks = [
     {
       name: "WhatsApp",
       icon: MessageCircle,
-      url: "https://wa.me/50422345678?text=Hola, necesito información sobre sus servicios",
+      url: whatsappUrl,
       color: "bg-[#25D366] hover:bg-[#25D366]/90",
       description: "Chatea con nosotros"
     },
     {
       name: "Facebook",
       icon: Facebook,
-      url: "https://www.facebook.com/funeralesdelnorte",
+      url: facebookUrl,
       color: "bg-[#1877F2] hover:bg-[#1877F2]/90",
       description: "Síguenos en Facebook"
     },
     {
       name: "Instagram",
       icon: Instagram,
-      url: "https://www.instagram.com/funeralesdelnorte",
+      url: instagramUrl,
       color: "bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90",
       description: "Visítanos en Instagram"
     },
     {
       name: "Correo",
       icon: Mail,
-      url: "mailto:info@funeralesdelnorte.com",
+      url: `mailto:${emailAddress}`,
       color: "bg-gray-600 hover:bg-gray-600/90",
       description: "Envíanos un email"
     },
     {
       name: "Teléfono",
       icon: Phone,
-      url: "tel:+50422345678",
+      url: phoneTarget,
       color: "bg-primary-green hover:bg-primary-green/90",
       description: "Llámanos directamente"
     }
   ];
 
   const handleSocialClick = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
+    if (url.startsWith("mailto:") || url.startsWith("tel:")) {
+      window.location.href = url;
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
     onClose();
   };
 
