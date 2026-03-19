@@ -1,24 +1,30 @@
-import { Phone, Mail, MapPin, Clock } from "lucide-react";
-import { useForm, ValidationError } from "@formspree/react";
+import { Phone, Mail, MapPin, Clock, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { useState, useEffect } from "react";
-import { fetchContactSection, type ContactSectionData } from "@/lib/strapi";
+import { useState, useEffect, type FormEvent } from "react";
+import {
+  fetchContactSection,
+  sendContactEmail,
+  type ContactSectionData,
+  type ContactEmailPayload,
+} from "@/lib/strapi";
 import memorialInterior from "@/assets/memorial-interior.jpg";
 
 // Mapa de iconos disponibles
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, LucideIcon> = {
   Phone,
   Mail,
   MapPin,
   Clock,
 };
 
+type ContactFormErrors = Partial<Record<keyof ContactEmailPayload, string>>;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const ContactSection = () => {
   const normalizePhone = (value: string) => value.replace(/\D/g, "");
-  const [state, handleSubmit] = useForm("xgollwbe");
   const [contactData, setContactData] = useState<ContactSectionData>({
     title: "Contáctanos",
     subtitle: "Estamos aquí para apoyarlo cuando más nos necesite. Contáctenos en cualquier momento del día o la noche.",
@@ -29,6 +35,10 @@ export const ContactSection = () => {
     formTitle: "Envíanos un Mensaje",
     formSubmitButtonText: "Enviar Mensaje",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSucceeded, setIsSucceeded] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ContactFormErrors>({});
 
   useEffect(() => {
     const loadData = async () => {
@@ -40,6 +50,105 @@ export const ContactSection = () => {
   }, []);
 
   const backgroundImage = contactData.backgroundImageUrl || memorialInterior;
+
+  const validateForm = (payload: ContactEmailPayload): ContactFormErrors => {
+    const errors: ContactFormErrors = {};
+    const phoneDigits = normalizePhone(payload.telefono || "");
+    const allowedServices = new Set([
+      "",
+      "funeral",
+      "cemetery",
+      "cremation",
+      "other",
+      "Servicio funerario",
+      "Cementerio",
+      "Cremacion",
+      "Otro",
+    ]);
+
+    if (!payload.nombre_completo.trim()) {
+      errors.nombre_completo = "Ingrese su nombre completo.";
+    }
+
+    if (!payload.telefono.trim()) {
+      errors.telefono = "Ingrese un teléfono.";
+    } else if (phoneDigits.length < 8) {
+      errors.telefono = "Ingrese un teléfono válido.";
+    }
+
+    if (!payload.email.trim()) {
+      errors.email = "Ingrese su correo electrónico.";
+    } else if (!EMAIL_REGEX.test(payload.email)) {
+      errors.email = "Ingrese un correo electrónico válido.";
+    }
+
+    if ((payload.mensaje || "").length > 2000) {
+      errors.mensaje = "El mensaje es demasiado largo.";
+    }
+
+    if (!allowedServices.has(payload.servicio_interes || "")) {
+      errors.servicio_interes = "Seleccione un servicio válido.";
+    }
+
+    return errors;
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    const nombreCompleto = String(formData.get("nombre_completo") || "").trim();
+    const telefono = String(formData.get("telefono") || "").trim();
+    const email = String(formData.get("email") || "").trim();
+    const rawServicioInteres = String(formData.get("servicio_interes") || "").trim();
+    const mensaje = String(formData.get("mensaje") || "").trim();
+    const website = String(formData.get("website") || "").trim();
+    const serviceLabelMap: Record<string, string> = {
+      funeral: "Servicio funerario",
+      cemetery: "Cementerio",
+      cremation: "Cremacion",
+      other: "Otro",
+    };
+    const servicioInteres = serviceLabelMap[rawServicioInteres] || rawServicioInteres;
+
+    const payload: ContactEmailPayload = {
+      nombre_completo: nombreCompleto,
+      telefono,
+      email,
+      servicio_interes: servicioInteres,
+      mensaje,
+      website,
+    };
+
+    const validationErrors = validateForm(payload);
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      setSubmitError("Revise los campos marcados e intente de nuevo.");
+      setIsSucceeded(false);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFieldErrors({});
+    setSubmitError(null);
+    setIsSucceeded(false);
+
+    try {
+      await sendContactEmail(payload);
+      setIsSucceeded(true);
+      form.reset();
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo enviar el mensaje. Intente nuevamente."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section 
@@ -124,14 +233,26 @@ export const ContactSection = () => {
                     {contactData.formTitle}
                   </h3>
                   
-                  {state.succeeded && (
+                  {isSucceeded && (
                     <div className="bg-green-500/20 border border-green-500 rounded-lg p-4 mb-6 text-green-100">
                       <p className="font-semibold">¡Mensaje enviado con éxito!</p>
                       <p className="text-sm mt-1">Gracias por contactarnos. Te responderemos pronto.</p>
                     </div>
                   )}
+
+                  {submitError && (
+                    <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6 text-red-100">
+                      <p className="font-semibold">No se pudo enviar el mensaje</p>
+                      <p className="text-sm mt-1">{submitError}</p>
+                    </div>
+                  )}
                   
                   <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="hidden" aria-hidden="true">
+                      <label htmlFor="website">Sitio web</label>
+                      <input id="website" name="website" type="text" autoComplete="off" tabIndex={-1} />
+                    </div>
+
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="nombre" className="block text-white/90 text-sm font-medium mb-2">
@@ -144,12 +265,9 @@ export const ContactSection = () => {
                           placeholder="Su nombre"
                           className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                         />
-                        <ValidationError
-                          prefix="Nombre"
-                          field="nombre_completo"
-                          errors={state.errors}
-                          className="text-red-300 text-xs mt-1"
-                        />
+                        {fieldErrors.nombre_completo && (
+                          <p className="text-red-300 text-xs mt-1">{fieldErrors.nombre_completo}</p>
+                        )}
                       </div>
                       <div>
                         <label htmlFor="telefono" className="block text-white/90 text-sm font-medium mb-2">
@@ -163,12 +281,9 @@ export const ContactSection = () => {
                           placeholder="Su teléfono"
                           className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                         />
-                        <ValidationError
-                          prefix="Teléfono"
-                          field="telefono"
-                          errors={state.errors}
-                          className="text-red-300 text-xs mt-1"
-                        />
+                        {fieldErrors.telefono && (
+                          <p className="text-red-300 text-xs mt-1">{fieldErrors.telefono}</p>
+                        )}
                       </div>
                     </div>
                     
@@ -184,12 +299,9 @@ export const ContactSection = () => {
                         placeholder="su@email.com"
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                       />
-                      <ValidationError
-                        prefix="Correo"
-                        field="email"
-                        errors={state.errors}
-                        className="text-red-300 text-xs mt-1"
-                      />
+                      {fieldErrors.email && (
+                        <p className="text-red-300 text-xs mt-1">{fieldErrors.email}</p>
+                      )}
                     </div>
                     
                     <div>
@@ -207,6 +319,9 @@ export const ContactSection = () => {
                         <option value="cremation" className="text-gray-800">Cremación</option>
                         <option value="other" className="text-gray-800">Otro</option>
                       </select>
+                      {fieldErrors.servicio_interes && (
+                        <p className="text-red-300 text-xs mt-1">{fieldErrors.servicio_interes}</p>
+                      )}
                     </div>
                     
                     <div>
@@ -220,21 +335,18 @@ export const ContactSection = () => {
                         rows={4}
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                       />
-                      <ValidationError
-                        prefix="Mensaje"
-                        field="mensaje"
-                        errors={state.errors}
-                        className="text-red-300 text-xs mt-1"
-                      />
+                      {fieldErrors.mensaje && (
+                        <p className="text-red-300 text-xs mt-1">{fieldErrors.mensaje}</p>
+                      )}
                     </div>
                     
                     <Button 
                       type="submit"
-                      disabled={state.submitting}
+                      disabled={isSubmitting}
                       size="lg"
                       className="w-full bg-primary-gold hover:bg-primary-gold/90 text-white font-semibold py-4"
                     >
-                      {state.submitting ? "Enviando..." : contactData.formSubmitButtonText}
+                      {isSubmitting ? "Enviando..." : contactData.formSubmitButtonText}
                     </Button>
                   </form>
                 </CardContent>

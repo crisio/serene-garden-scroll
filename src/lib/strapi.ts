@@ -734,6 +734,67 @@ export type ContactSectionData = {
   backgroundImageUrl?: string;
 };
 
+export type ContactEmailPayload = {
+  nombre_completo: string;
+  telefono: string;
+  email: string;
+  servicio_interes?: string;
+  mensaje?: string;
+  website?: string;
+};
+
+export type ContactEmailResponse = {
+  success: boolean;
+  message?: string;
+};
+
+const getContactEmailUrl = () => {
+  const configuredUrl = (import.meta.env.VITE_CONTACT_EMAIL_URL || "").trim();
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
+  const configuredEndpoint = (import.meta.env.VITE_CONTACT_EMAIL_ENDPOINT || "").trim();
+  if (configuredEndpoint) {
+    const normalizedPath = configuredEndpoint.startsWith("/")
+      ? configuredEndpoint
+      : `/${configuredEndpoint}`;
+    return `${API_URL}${normalizedPath}`;
+  }
+
+  return "http://localhost:1337/api/contact-email";
+};
+
+export async function sendContactEmail(payload: ContactEmailPayload): Promise<ContactEmailResponse> {
+  const res = await fetch(getContactEmailUrl(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    let message = "No se pudo enviar el mensaje. Intente nuevamente.";
+    try {
+      const errorData = await res.json();
+      message =
+        errorData?.error?.message ||
+        errorData?.message ||
+        message;
+    } catch {
+      // Keep fallback message when the backend error body is not JSON.
+    }
+    throw new Error(message);
+  }
+
+  const data = await res.json().catch(() => ({}));
+  return {
+    success: data?.success ?? true,
+    message: data?.message,
+  };
+}
+
 export async function fetchContactSection(): Promise<ContactSectionData> {
   try {
     const res = await sget<any>("/api/contact-section", {

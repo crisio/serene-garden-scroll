@@ -139,6 +139,52 @@ pm2 restart funerales-api
 pm2 monit
 ```
 
+### Contacto por Gmail (Strapi)
+
+El frontend ya fue migrado para enviar el formulario de `Contáctanos` a un endpoint backend propio.
+
+**Endpoint esperado por el frontend:**
+- `POST /api/contact-email`
+- URL completa por defecto: `https://funeralesapi.ciudadanosb.com/api/contact-email`
+- Variable opcional en frontend para cambiar ruta: `VITE_CONTACT_EMAIL_ENDPOINT`
+
+**Payload enviado:**
+
+```json
+{
+   "nombre_completo": "Juan Perez",
+   "telefono": "+504 9999-0000",
+   "email": "juan@email.com",
+   "servicio_interes": "funeral",
+   "mensaje": "Necesito informacion"
+}
+```
+
+**Respuesta esperada:**
+
+```json
+{
+   "success": true,
+   "message": "Correo enviado"
+}
+```
+
+**Variables privadas backend (NO frontend):**
+
+```env
+GMAIL_USER=tu_cuenta@gmail.com
+GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+EMAIL_TO_CONTACT=destino@dominio.com
+```
+
+**Checklist rapido en Strapi backend (`/var/www/funerales/api`):**
+1. Instalar y configurar `@strapi/plugin-email` con `nodemailer` y Gmail SMTP.
+2. Crear ruta/controlador para `POST /api/contact-email`.
+3. Validar campos obligatorios (`nombre_completo`, `telefono`, `email`) en servidor.
+4. Enviar correo a `EMAIL_TO_CONTACT` con `replyTo` = email del usuario.
+5. `npm run build` y `pm2 restart funerales-api`.
+6. Probar endpoint con `curl` antes de desplegar frontend.
+
 ---
 
 ## 🔐 Configuración SSH (Primera Vez)
