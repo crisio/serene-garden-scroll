@@ -96,6 +96,12 @@ export default function ObituaryPost() {
   const [error, setError] = useState(false);
   const [emergencyPhone, setEmergencyPhone] = useState("(504) 2234-5678");
 
+  const emergencyPhoneHref = (() => {
+    const digits = emergencyPhone.replace(/\D/g, "");
+    if (!digits) return "";
+    return `tel:+${digits}`;
+  })();
+
   useEffect(() => {
     if (!slug) {
       setError(true);
@@ -382,12 +388,12 @@ export default function ObituaryPost() {
                     Nuestros asesores están disponibles 24/7 para apoyarte en este momento difícil
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <a href={`tel:${emergencyPhone}`}>
-                      <Button size="lg" className="gap-2 w-full sm:w-auto">
+                    <Button asChild size="lg" className="gap-2 w-full sm:w-auto">
+                      <a href={emergencyPhoneHref || undefined} aria-label={`Llamar al ${emergencyPhone}`}>
                         <Phone className="h-5 w-5" />
                         Llamar Ahora
-                      </Button>
-                    </a>
+                      </a>
+                    </Button>
                     <div className="flex items-center gap-2 text-lg font-semibold text-slate-700">
                       <Phone className="h-5 w-5 text-primary" />
                       {emergencyPhone}

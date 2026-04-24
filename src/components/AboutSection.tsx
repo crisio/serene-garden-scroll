@@ -118,7 +118,7 @@ export const AboutSection = () => {
               </div>
 
               {/* Desktop - Grid */}
-              <div className="hidden lg:grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+              <div className="hidden lg:grid md:grid-cols-2 lg:grid-cols-5 gap-8 mb-16">
                 {aboutData.value.map((value, index) => renderValueCard(value, index))}
               </div>
             </>
