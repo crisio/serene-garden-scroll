@@ -1,7 +1,8 @@
-import { Users, Heart, Shield, Clock, Lightbulb } from "lucide-react";
+import { Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect, useRef } from "react";
 import { fetchAboutSection, type AboutSectionData } from "@/lib/strapi";
+import { resolveIcon } from "@/lib/icons";
 import {
   Carousel,
   CarouselContent,
@@ -10,15 +11,6 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-
-// Mapa de iconos disponibles
-const iconMap: Record<string, any> = {
-  Heart,
-  Users,
-  Shield,
-  Clock,
-  Lightbulb,
-};
 
 export const AboutSection = () => {
   const autoplayPlugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
@@ -55,7 +47,7 @@ export const AboutSection = () => {
   }, []);
 
   const renderValueCard = (value: any, index: number) => {
-    const IconComponent = iconMap[value.icon] || Heart;
+    const IconComponent = resolveIcon(value.icon);
     return (
       <Card 
         key={index} 
@@ -170,7 +162,7 @@ export const AboutSection = () => {
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-primary-green/10 rounded-full flex items-center justify-center">
                     {(() => {
-                      const MissionIcon = iconMap[aboutData.missionvision.missionIcon] || Heart;
+                      const MissionIcon = resolveIcon(aboutData.missionvision.missionIcon);
                       return <MissionIcon className="w-6 h-6 text-primary-green" />;
                     })()}
                   </div>
@@ -189,7 +181,7 @@ export const AboutSection = () => {
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-primary-gold/10 rounded-full flex items-center justify-center">
                     {(() => {
-                      const VisionIcon = iconMap[aboutData.missionvision.visionIcon] || Shield;
+                      const VisionIcon = resolveIcon(aboutData.missionvision.visionIcon, Shield);
                       return <VisionIcon className="w-6 h-6 text-primary-gold" />;
                     })()}
                   </div>
