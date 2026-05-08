@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { scrollToSection } from "@/lib/scrollUtils";
 import { useState, useEffect, useRef } from "react";
 import { fetchLocations, fetchLocationsPage, type Location, type LocationsPageData } from "@/lib/strapi";
+import { buildTelHref } from "@/lib/whatsapp";
 import {
   Carousel,
   CarouselContent,
@@ -201,7 +202,7 @@ export const LocationsSection = () => {
                           {pageData.grassPhones.map((phone, idx) => (
                             <a
                               key={idx}
-                              href={`tel:${phone.number.replace(/\D/g, "")}`}
+                              href={buildTelHref(phone.number) ?? "#"}
                               className="flex items-center justify-center gap-2 text-primary-green bg-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto"
                               aria-label={`Llamar ${phone.number}`}
                             >

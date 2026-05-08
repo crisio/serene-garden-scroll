@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { fetchOtherServicesPage, type OtherServicesPageData } from "@/lib/strapi";
+import { buildTelHref, buildWhatsappUrl } from "@/lib/whatsapp";
 import {
   Carousel,
   CarouselContent,
@@ -52,12 +53,16 @@ export const OtherServicesSection = () => {
   );
 
   const handleCall = (phoneNumber: string) => {
-    window.location.href = `tel:${phoneNumber}`;
+    const tel = buildTelHref(phoneNumber);
+    if (tel) window.location.href = tel;
   };
 
-  const handleWhatsApp = (phoneNumber: string) => {
-    const cleanNumber = phoneNumber.replace(/\D/g, '');
-    window.open(`https://wa.me/504${cleanNumber}`, '_blank', 'noopener,noreferrer');
+  const handleWhatsApp = (phoneNumber: string, serviceTitle?: string) => {
+    const message = serviceTitle
+      ? `Hola, necesito informacion sobre ${serviceTitle}.`
+      : undefined;
+    const url = buildWhatsappUrl(phoneNumber, message);
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const renderServiceCard = (service: any, index: number) => {
@@ -105,7 +110,7 @@ export const OtherServicesSection = () => {
                       variant="outline"
                       size="icon"
                       className="text-primary-green border-primary-green hover:bg-primary-green hover:text-white"
-                      onClick={() => handleWhatsApp(phone.number)}
+                      onClick={() => handleWhatsApp(phone.number, service.title)}
                       aria-label={`WhatsApp ${phone.number}`}
                     >
                       <MessageCircle className="w-4 h-4" />
