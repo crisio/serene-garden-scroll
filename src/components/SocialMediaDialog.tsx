@@ -20,7 +20,7 @@ export const SocialMediaDialog = ({ isOpen, onClose }: SocialMediaDialogProps) =
   const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/50425567400");
   const [instagramUrl, setInstagramUrl] = useState("https://instagram.com/jardinesdelrecuerdo");
   const [emailAddress, setEmailAddress] = useState("info@funeralesdelnorte.com");
-  const [phoneTarget] = useState("https://wa.me/50425024330?text=Hola,%20quisiera%20información%20sobre%20prever%20y%20otras%20gestiones");
+  const [phoneTarget, setPhoneTarget] = useState("tel:+50425024330");
 
   useEffect(() => {
     if (!isOpen) {
@@ -32,6 +32,18 @@ export const SocialMediaDialog = ({ isOpen, onClose }: SocialMediaDialogProps) =
     const extractFirstEmail = (value: string) => {
       const match = value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
       return match?.[0]?.toLowerCase();
+    };
+
+    const toTelHref = (raw?: string | null) => {
+      if (!raw) return null;
+      const cleaned = raw.replace(/[^\d+]/g, "");
+      if (!cleaned) return null;
+      // Si no empieza con + y tiene 8 digitos (Honduras local), agrega prefijo 504.
+      if (!cleaned.startsWith("+")) {
+        const digits = cleaned;
+        return `tel:+${digits.length === 8 ? "504" + digits : digits}`;
+      }
+      return `tel:${cleaned}`;
     };
 
     const loadContactData = async () => {
@@ -61,6 +73,11 @@ export const SocialMediaDialog = ({ isOpen, onClose }: SocialMediaDialogProps) =
 
         if (firstEmail) {
           setEmailAddress(firstEmail);
+        }
+
+        const tel = toTelHref(contactData.emergencyPhone);
+        if (tel) {
+          setPhoneTarget(tel);
         }
       } catch (error) {
         console.error("Error loading SocialMediaDialog data:", error);
