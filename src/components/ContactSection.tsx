@@ -51,11 +51,19 @@ export const ContactSection = () => {
 
   const backgroundImage = contactData.backgroundImageUrl || memorialInterior;
 
+  const FIELD_LABELS: Record<keyof ContactEmailPayload, string> = {
+    nombre_completo: "Nombre completo",
+    telefono: "Teléfono",
+    email: "Correo electrónico",
+    servicio_interes: "Servicio de interés",
+    mensaje: "Mensaje",
+    website: "Website",
+  };
+
   const validateForm = (payload: ContactEmailPayload): ContactFormErrors => {
     const errors: ContactFormErrors = {};
     const phoneDigits = normalizePhone(payload.telefono || "");
     const allowedServices = new Set([
-      "",
       "funeral",
       "cemetery",
       "cremation",
@@ -82,12 +90,18 @@ export const ContactSection = () => {
       errors.email = "Ingrese un correo electrónico válido.";
     }
 
-    if ((payload.mensaje || "").length > 2000) {
-      errors.mensaje = "El mensaje es demasiado largo.";
+    if (!(payload.servicio_interes || "").trim()) {
+      errors.servicio_interes = "Seleccione el servicio de su interés.";
+    } else if (!allowedServices.has(payload.servicio_interes)) {
+      errors.servicio_interes = "Seleccione un servicio válido.";
     }
 
-    if (!allowedServices.has(payload.servicio_interes || "")) {
-      errors.servicio_interes = "Seleccione un servicio válido.";
+    if (!(payload.mensaje || "").trim()) {
+      errors.mensaje = "Cuéntenos cómo podemos ayudarle.";
+    } else if (payload.mensaje.trim().length < 10) {
+      errors.mensaje = "El mensaje debe tener al menos 10 caracteres.";
+    } else if (payload.mensaje.length > 2000) {
+      errors.mensaje = "El mensaje es demasiado largo (máximo 2000 caracteres).";
     }
 
     return errors;
@@ -125,7 +139,9 @@ export const ContactSection = () => {
     const validationErrors = validateForm(payload);
     if (Object.keys(validationErrors).length > 0) {
       setFieldErrors(validationErrors);
-      setSubmitError("Revise los campos marcados e intente de nuevo.");
+      // No es un error del servidor: dejamos submitError en null para mostrar
+      // solo la alerta amarilla con la lista de campos faltantes.
+      setSubmitError(null);
       setIsSucceeded(false);
       return;
     }
@@ -240,6 +256,24 @@ export const ContactSection = () => {
                     </div>
                   )}
 
+                  {Object.keys(fieldErrors).length > 0 && (
+                    <div
+                      role="alert"
+                      className="bg-yellow-400/20 border border-yellow-400 rounded-lg p-4 mb-6 text-yellow-50"
+                    >
+                      <p className="font-semibold">Antes de enviar, completa lo que te falta:</p>
+                      <ul className="text-sm mt-2 list-disc list-inside space-y-1">
+                        {(Object.entries(fieldErrors) as Array<[keyof ContactEmailPayload, string]>).map(
+                          ([field, msg]) => (
+                            <li key={field}>
+                              <span className="font-medium">{FIELD_LABELS[field]}:</span> {msg}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
                   {submitError && (
                     <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6 text-red-100">
                       <p className="font-semibold">No se pudo enviar el mensaje</p>
@@ -247,7 +281,7 @@ export const ContactSection = () => {
                     </div>
                   )}
                   
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form onSubmit={handleSubmit} noValidate className="space-y-6">
                     <div className="hidden" aria-hidden="true">
                       <label htmlFor="website">Sitio web</label>
                       <input id="website" name="website" type="text" autoComplete="off" tabIndex={-1} />
@@ -266,7 +300,7 @@ export const ContactSection = () => {
                           className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                         />
                         {fieldErrors.nombre_completo && (
-                          <p className="text-red-300 text-xs mt-1">{fieldErrors.nombre_completo}</p>
+                          <p className="text-yellow-200 text-xs mt-1">{fieldErrors.nombre_completo}</p>
                         )}
                       </div>
                       <div>
@@ -282,7 +316,7 @@ export const ContactSection = () => {
                           className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                         />
                         {fieldErrors.telefono && (
-                          <p className="text-red-300 text-xs mt-1">{fieldErrors.telefono}</p>
+                          <p className="text-yellow-200 text-xs mt-1">{fieldErrors.telefono}</p>
                         )}
                       </div>
                     </div>
@@ -300,7 +334,7 @@ export const ContactSection = () => {
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                       />
                       {fieldErrors.email && (
-                        <p className="text-red-300 text-xs mt-1">{fieldErrors.email}</p>
+                        <p className="text-yellow-200 text-xs mt-1">{fieldErrors.email}</p>
                       )}
                     </div>
                     
@@ -308,9 +342,11 @@ export const ContactSection = () => {
                       <label htmlFor="servicio" className="block text-white/90 text-sm font-medium mb-2">
                         Servicio de Interés
                       </label>
-                      <select 
+                      <select
                         id="servicio"
                         name="servicio_interes"
+                        required
+                        defaultValue=""
                         className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white"
                       >
                         <option value="" className="text-gray-800">Seleccione un servicio</option>
@@ -320,7 +356,7 @@ export const ContactSection = () => {
                         <option value="other" className="text-gray-800">Otro</option>
                       </select>
                       {fieldErrors.servicio_interes && (
-                        <p className="text-red-300 text-xs mt-1">{fieldErrors.servicio_interes}</p>
+                        <p className="text-yellow-200 text-xs mt-1">{fieldErrors.servicio_interes}</p>
                       )}
                     </div>
                     
@@ -328,15 +364,18 @@ export const ContactSection = () => {
                       <label htmlFor="mensaje" className="block text-white/90 text-sm font-medium mb-2">
                         Mensaje
                       </label>
-                      <Textarea 
+                      <Textarea
                         id="mensaje"
                         name="mensaje"
-                        placeholder="Cuéntenos cómo podemos ayudarle"
+                        required
+                        minLength={10}
+                        maxLength={2000}
+                        placeholder="Cuéntenos cómo podemos ayudarle (mínimo 10 caracteres)"
                         rows={4}
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
                       />
                       {fieldErrors.mensaje && (
-                        <p className="text-red-300 text-xs mt-1">{fieldErrors.mensaje}</p>
+                        <p className="text-yellow-200 text-xs mt-1">{fieldErrors.mensaje}</p>
                       )}
                     </div>
                     
