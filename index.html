@@ -11,7 +11,37 @@
     <!-- Origen del CDN de Strapi: ahorra DNS+TLS en la primera peticion del hero video -->
     <link rel="preconnect" href="https://jardinesdelrecuerdo.hn" crossorigin>
     <link rel="dns-prefetch" href="https://jardinesdelrecuerdo.hn">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=PT+Serif:wght@400;700&family=Allura&display=swap" rel="stylesheet">
+
+    <!-- Preload de la fuente local Edwardian Script (titulo del hero, above the fold) -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/itcedscr-webfont.woff2"
+      crossorigin
+    />
+
+    <!-- Google Fonts: cargar de forma asincrona con el truco media=print/onload
+         para que el CSS no bloquee el renderizado. Con display=swap el texto
+         aparece inmediatamente en la fuente fallback y se intercambia cuando
+         la web font esta lista. -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=PT+Serif:wght@400;700&family=Allura&display=swap"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=PT+Serif:wght@400;700&family=Allura&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=PT+Serif:wght@400;700&family=Allura&display=swap"
+      />
+    </noscript>
     <meta name="author" content="Lovable" />
 
     <meta property="og:title" content="b44121b9-a876-4da7-816c-d99f41525977" />

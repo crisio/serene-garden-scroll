@@ -1,11 +1,14 @@
-/* Edwardian Script ITC Web Font */
+/* Edwardian Script ITC Web Font - precargada via <link rel="preload"> en index.html.
+   font-display: optional evita el flash de fallback->web-font: si la fuente no
+   esta disponible en ~100ms (raro con preload), el navegador queda en el fallback
+   (Allura) sin re-renderizar el titulo a mitad de carga. */
 @font-face {
   font-family: 'edwardian_script_itcregular';
   src: url('/fonts/itcedscr-webfont.woff2') format('woff2'),
        url('/fonts/itcedscr-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
+  font-display: optional;
 }
 
 @tailwind base;
