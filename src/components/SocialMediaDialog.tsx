@@ -15,9 +15,25 @@ interface SocialMediaDialogProps {
   onClose: () => void;
 }
 
+const DEFAULT_WHATSAPP_MESSAGE = "Hola, quisiera informacion sobre los servicios.";
+
+const buildWhatsappUrl = (number?: string | null, message: string = DEFAULT_WHATSAPP_MESSAGE) => {
+  if (!number) return null;
+  // Limpia todo lo que no sea digito; wa.me espera numero internacional sin "+".
+  const digits = String(number).replace(/\D/g, "");
+  if (!digits) return null;
+  // Honduras: si llega un numero local de 8 digitos, prefija 504.
+  const intl = digits.length === 8 ? `504${digits}` : digits;
+  const url = new URL(`https://wa.me/${intl}`);
+  if (message) url.searchParams.set("text", message);
+  return url.toString();
+};
+
 export const SocialMediaDialog = ({ isOpen, onClose }: SocialMediaDialogProps) => {
   const [facebookUrl, setFacebookUrl] = useState("https://facebook.com/jardinesdelrecuerdo");
-  const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/50425567400");
+  const [whatsappUrl, setWhatsappUrl] = useState(
+    buildWhatsappUrl("50425567400") ?? "https://wa.me/50425567400"
+  );
   const [instagramUrl, setInstagramUrl] = useState("https://instagram.com/jardinesdelrecuerdo");
   const [emailAddress, setEmailAddress] = useState("info@funeralesdelnorte.com");
   const [phoneTarget, setPhoneTarget] = useState("tel:+50425024330");
@@ -63,8 +79,9 @@ export const SocialMediaDialog = ({ isOpen, onClose }: SocialMediaDialogProps) =
         if (headerData.facebookUrl) {
           setFacebookUrl(headerData.facebookUrl);
         }
-        if (headerData.whatsappNumber) {
-          setWhatsappUrl(`https://wa.me/${headerData.whatsappNumber}`);
+        const waUrl = buildWhatsappUrl(headerData.whatsappNumber);
+        if (waUrl) {
+          setWhatsappUrl(waUrl);
         }
 
         const firstEmail = contactData.contactinfo
