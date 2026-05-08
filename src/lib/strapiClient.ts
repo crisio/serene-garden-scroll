@@ -111,6 +111,19 @@ export const pickMediaUrl = (media?: StrapiMedia | any): string | undefined => {
   return candidate ? mediaUrl(candidate) : undefined;
 };
 
+export const pickMedia = (media?: StrapiMedia | any): { url?: string; mime?: string; size?: number; width?: number; height?: number } => {
+  const attrs: any = media?.data?.attributes ?? media?.attributes ?? media;
+  if (!attrs) return {};
+  const candidate = attrs.formats?.large?.url || attrs.url || attrs.formats?.medium?.url || attrs.formats?.small?.url;
+  return {
+    url: candidate ? mediaUrl(candidate) : undefined,
+    mime: attrs.mime,
+    size: attrs.size,
+    width: attrs.width,
+    height: attrs.height,
+  };
+};
+
 // Strapi fetch options
 export interface StrapiFetchOptions {
   params?: {
