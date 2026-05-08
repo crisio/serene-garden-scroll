@@ -3,6 +3,7 @@ import { Menu, X, Facebook, Instagram, Phone } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { fetchSiteHeader } from "@/lib/strapi";
+import { buildWhatsappUrl } from "@/lib/whatsapp";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 
 const defaultLogo = "/lovable-uploads/07568c23-c994-4213-83cf-06bea56fbc27.png";
@@ -240,7 +241,7 @@ export const Header = () => {
                 <Instagram size={18} />
               </a>
               <a
-                href={`https://wa.me/${socialMedia.whatsapp}`}
+                href={buildWhatsappUrl(socialMedia.whatsapp) ?? "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"
@@ -330,7 +331,7 @@ export const Header = () => {
                   <Instagram size={20} />
                 </a>
                 <a
-                  href={`https://wa.me/${socialMedia.whatsapp}`}
+                  href={buildWhatsappUrl(socialMedia.whatsapp) ?? "#"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-primary-green/10 hover:bg-primary-green flex items-center justify-center text-primary-green hover:text-white smooth-transition"

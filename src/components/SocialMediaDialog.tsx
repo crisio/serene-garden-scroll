@@ -9,25 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Facebook, Instagram, MessageCircle, Mail, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchContactSection, fetchSiteHeader } from "@/lib/strapi";
+import { buildWhatsappUrl } from "@/lib/whatsapp";
 
 interface SocialMediaDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const DEFAULT_WHATSAPP_MESSAGE = "Hola, quisiera informacion sobre los servicios.";
-
-const buildWhatsappUrl = (number?: string | null, message: string = DEFAULT_WHATSAPP_MESSAGE) => {
-  if (!number) return null;
-  // Limpia todo lo que no sea digito; wa.me espera numero internacional sin "+".
-  const digits = String(number).replace(/\D/g, "");
-  if (!digits) return null;
-  // Honduras: si llega un numero local de 8 digitos, prefija 504.
-  const intl = digits.length === 8 ? `504${digits}` : digits;
-  const url = new URL(`https://wa.me/${intl}`);
-  if (message) url.searchParams.set("text", message);
-  return url.toString();
-};
 
 export const SocialMediaDialog = ({ isOpen, onClose }: SocialMediaDialogProps) => {
   const [facebookUrl, setFacebookUrl] = useState("https://facebook.com/jardinesdelrecuerdo");
