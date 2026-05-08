@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -19,6 +19,7 @@ import { useRef } from "react";
 const defaultLogo = "/lovable-uploads/07568c23-c994-4213-83cf-06bea56fbc27.png";
 
 export default function Floreria() {
+  const navigate = useNavigate();
   const [data, setData] = useState<FloreriaData | null>(null);
   const [logoUrl, setLogoUrl] = useState<string>(defaultLogo);
   const [isLoading, setIsLoading] = useState(true);
@@ -305,12 +306,14 @@ export default function Floreria() {
       <section className="py-8 bg-gray-50 border-t">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <Link to="/">
-              <Button variant="outline" className="gap-2">
-                <HomeIcon className="w-4 h-4" />
-                Volver al Inicio
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate("/", { state: { scrollTo: "other-services" } })}
+            >
+              <HomeIcon className="w-4 h-4" />
+              Volver al Inicio
+            </Button>
           </div>
         </div>
       </section>

@@ -184,7 +184,7 @@ export default function ObituaryPost() {
                 }
               </p>
               <div className="space-x-4">
-                <Button onClick={() => navigate(-1)} variant="outline">
+                <Button onClick={() => navigate("/obituarios")} variant="outline">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Volver
                 </Button>
@@ -247,7 +247,7 @@ export default function ObituaryPost() {
         <div className="max-w-6xl mx-auto">
           {/* Back Button */}
           <Button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/obituarios")}
             variant="ghost"
             className="mb-6"
           >

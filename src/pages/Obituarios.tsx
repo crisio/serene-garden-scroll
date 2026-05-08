@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ const OBITUARIES_PER_PAGE = 9;
 const defaultLogo = "/lovable-uploads/07568c23-c994-4213-83cf-06bea56fbc27.png";
 
 export default function Obituarios() {
+  const navigate = useNavigate();
   const [obituaries, setObituaries] = useState<Obituary[]>([]);
   const [filteredObituaries, setFilteredObituaries] = useState<Obituary[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,12 +59,14 @@ export default function Obituarios() {
       <div className="container mx-auto px-4 py-8">
         {/* Back to Home Button */}
         <div className="mb-6">
-          <Link to="/">
-            <Button variant="ghost" className="text-slate-600 hover:text-slate-900">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver al Inicio
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            className="text-slate-600 hover:text-slate-900"
+            onClick={() => navigate("/", { state: { scrollTo: "top" } })}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver al Inicio
+          </Button>
         </div>
 
         {/* Header with Logo */}

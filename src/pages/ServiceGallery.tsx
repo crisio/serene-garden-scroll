@@ -38,15 +38,7 @@ export const ServiceGallery = () => {
   }, [slug]);
 
   const handleGoBack = () => {
-    navigate("/");
-    // Esperar a que la navegación se complete y luego hacer scroll
-    setTimeout(() => {
-      const servicesSection = document.getElementById("services");
-      if (servicesSection) {
-        const y = servicesSection.getBoundingClientRect().top + window.pageYOffset - 100;
-        window.scrollTo({ top: y, behavior: "smooth" });
-      }
-    }, 100);
+    navigate("/", { state: { scrollTo: "services" } });
   };
 
   if (loading) {
