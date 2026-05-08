@@ -116,7 +116,7 @@ export const DynamicHero = () => {
                   {/* Content */}
                   <div className="relative z-10 h-full w-full flex items-center justify-center">
                     <div className="container mx-auto px-3 sm:px-4 md:px-6 text-center text-white">
-                      <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 md:space-y-10">
+                      <div className="max-w-5xl mx-auto space-y-0.5 sm:space-y-1 md:space-y-1.5">
                       {attrs.title && (
                         <h1 className={`${getTitleSizeClasses(attrs.titleSize)} leading-tight font-normal drop-shadow-lg`} style={{ fontFamily: 'edwardian_script_itcregular, "Allura", cursive' }}>
                           {attrs.title}
@@ -128,7 +128,7 @@ export const DynamicHero = () => {
                         </p>
                       )}
                       {(attrs.ctaText && attrs.ctaUrl) && (
-                        <div className="flex justify-center mt-10 sm:mt-12 md:mt-20">
+                        <div className="flex justify-center">
                           <Button
                             size="lg"
                             className="bg-primary-green hover:bg-primary-green/90 text-white font-semibold px-6 py-3 sm:px-7 sm:py-3.5 md:px-10 md:py-5 text-sm sm:text-base md:text-xl smooth-transition shadow-lg"
