@@ -1,0 +1,39 @@
+{
+  "performance": {
+    "LCP_ms": 2500,
+    "CLS": 0.1,
+    "INP_ms": 200,
+    "FCP_ms": 1800,
+    "TTFB_ms": 800,
+    "TBT_ms": 200,
+    "load_complete_ms": 3000,
+    "total_transfer_kb": 1500,
+    "requests_max": 80,
+    "lighthouse_performance_min": 90
+  },
+  "errors": {
+    "console_errors_max": 0,
+    "console_warnings_max": 5,
+    "failed_requests_max": 0
+  },
+  "security": {
+    "require_https": true,
+    "no_mixed_content": true,
+    "required_headers": [
+      "Content-Security-Policy",
+      "Strict-Transport-Security",
+      "X-Content-Type-Options",
+      "X-Frame-Options",
+      "Referrer-Policy"
+    ],
+    "cookie_flags": ["Secure", "HttpOnly", "SameSite"]
+  },
+  "accessibility": {
+    "lighthouse_a11y_min": 90
+  },
+  "best_practices": {
+    "lighthouse_best_practices_min": 90,
+    "lighthouse_seo_min": 90
+  },
+  "_notes": "Estandar de calidad ALTO. Umbrales de performance = Core Web Vitals 'good'. Edita estos valores para ajustar el rigor por app. require_https/HSTS aplican a entornos productivos (http://localhost se exime de require_https)."
+}
