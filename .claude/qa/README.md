@@ -30,11 +30,21 @@ Añade a `.claude/settings.local.json` → `permissions.allow`:
 ```
 (No se añadieron automáticamente porque ampliar permisos requiere tu aprobación.)
 
+## Arquitectura (verificada en este contenedor)
+1. El hook **SessionStart** corre `setup.sh`, que: instala deps del proyecto, descarga
+   Chrome for Testing y lanza un **Chrome headless con `--no-sandbox`** escuchando en
+   `127.0.0.1:9222` (necesario al correr como root en contenedor).
+2. `.mcp.json` conecta el servidor `chrome-devtools` a ese Chrome vía
+   `--browserUrl=http://127.0.0.1:9222`.
+3. El agente `qa-engineer` usa las tools `mcp__chrome-devtools__*` para navegar, medir y auditar.
+
 ## Requisitos / troubleshooting
-- Necesita **Node** y salida a internet para `npx chrome-devtools-mcp@latest` (descarga Chrome la 1ª vez).
-- **Chrome en contenedor (sandbox):** si el MCP falla por sandbox corriendo como root, usa el fallback:
-  ```bash
-  google-chrome --headless --no-sandbox --remote-debugging-port=9222 &
-  # y registra el MCP con:  --browserUrl=http://127.0.0.1:9222
-  ```
+- Necesita **Node** y salida a internet la 1ª vez (descarga `chrome-devtools-mcp` + Chrome).
+- Si el MCP no conecta: corre `bash .claude/qa/setup.sh` y verifica
+  `curl http://127.0.0.1:9222/json/version`. Cambia el puerto con `QA_CHROME_PORT`.
+- En una máquina **no-contenedor** (Mac/Windows/local) puedes dejar que el MCP lance su
+  propio Chrome: cambia los args de `.mcp.json` a
+  `["-y","chrome-devtools-mcp@latest","--headless=true","--isolated=true"]`.
+- El dev server de este repo usa `host: "::"` (IPv6); en entornos sin IPv6 levántalo con
+  `npx vite --host 127.0.0.1`.
 - Ajusta el rigor editando `budget.json` (los defaults son Core Web Vitals "good" = estándar alto).

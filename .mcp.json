@@ -5,9 +5,7 @@
       "args": [
         "-y",
         "chrome-devtools-mcp@latest",
-        "--headless=true",
-        "--isolated=true",
-        "--viewport=1280x800"
+        "--browserUrl=http://127.0.0.1:9222"
       ]
     }
   }
