@@ -48,7 +48,11 @@ if curl -sf "http://127.0.0.1:${DEBUG_PORT}/json/version" >/dev/null 2>&1; then
 elif [ -n "${CHROME:-}" ]; then
   log "Lanzando Chrome headless en :${DEBUG_PORT}..."
   rm -rf /tmp/qa-chrome
+  # --ignore-certificate-errors: en entornos con proxy de egress que re-firma TLS
+  # (p. ej. egress gateway), Chrome no confía en la CA inyectada; sin esto toda
+  # navegación https falla con ERR_CERT_AUTHORITY_INVALID. Quitar en entornos sin proxy.
   nohup "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+    --ignore-certificate-errors \
     --remote-debugging-address=127.0.0.1 --remote-debugging-port="${DEBUG_PORT}" \
     --user-data-dir=/tmp/qa-chrome about:blank >/tmp/qa-chrome.log 2>&1 &
   for _ in $(seq 1 15); do
