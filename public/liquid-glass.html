@@ -254,7 +254,7 @@
      - feImage recibe el mapa (canvas → dataURL) desde JS.
      - feDisplacementMap lee el desplazamiento X del canal R y el Y del G.
      - ABERRACIÓN CROMÁTICA: tres pasadas de desplazamiento con escalas
-       ligeramente distintas (29/30/31). De cada una conservamos un solo
+       ligeramente distintas (39/40/41). De cada una conservamos un solo
        canal (R, G o B) y las sumamos: los bordes refractados muestran un
        fleco de color sutil, como en el vidrio real (la luz roja y la azul
        no se doblan igual). Las matrices mantienen alfa=1 para no perder
@@ -270,11 +270,11 @@
          feGaussianBlur mínimo aquí dentro no tiene ese problema -->
     <feGaussianBlur in="SourceGraphic" stdDeviation="0.3" result="frost"/>
     <feDisplacementMap in="frost" in2="mapa"
-                       scale="29" xChannelSelector="R" yChannelSelector="G" result="dR"/>
+                       scale="39" xChannelSelector="R" yChannelSelector="G" result="dR"/>
     <feDisplacementMap in="frost" in2="mapa"
-                       scale="30" xChannelSelector="R" yChannelSelector="G" result="dG"/>
+                       scale="40" xChannelSelector="R" yChannelSelector="G" result="dG"/>
     <feDisplacementMap in="frost" in2="mapa"
-                       scale="31" xChannelSelector="R" yChannelSelector="G" result="dB"/>
+                       scale="41" xChannelSelector="R" yChannelSelector="G" result="dB"/>
     <!-- Las matrices PRESERVAN el alfa original (fila "0 0 0 1 0"): si se
          fuerza alfa=1, las muestras que caen fuera de la región del filtro
          (transparentes) se vuelven negro opaco y manchan las tapas -->
@@ -307,7 +307,7 @@
   <div class="tarjeta g1">
     <h2>El bisel es el truco</h2>
     <p>
-      La deformación vive solo en los ~14 px del borde y sigue la ley de
+      La deformación vive solo en los ~16 px del borde y sigue la ley de
       Snell de un bisel de vidrio real (n = 1.5): casi nula al empezar el
       anillo y disparada junto a la orilla. El centro es vidrio plano, por
       eso el contenido bajo el pill se lee perfecto y solo el borde lo curva.
@@ -398,7 +398,7 @@
    de un rectángulo redondeado. Con ella obtenemos:
 
    - INTENSIDAD: 0 en todo el centro (vidrio plano) y creciente solo
-     dentro del bisel de ~14 px, siguiendo la ley de Snell para un
+     dentro del bisel de ~16 px, siguiendo la ley de Snell para un
      bisel circular de vidrio (n = 1.5): la desviación real del rayo
      es casi nula al empezar el bisel y se dispara junto al borde.
      Esto concentra la deformación en un anillo pegado a la orilla,
@@ -416,7 +416,7 @@
    ============================================================== */
 
 const ANCHO = 300, ALTO = 60;    // tamaño real del pill (px CSS)
-const BISEL = 14;                // grosor del "anillo" refractivo
+const BISEL = 16;                // grosor del "anillo" refractivo
 const SS = 2;                    // supermuestreo interno ×2 (antialias del mapa)
 const N_VIDRIO = 1.5;            // índice de refracción del vidrio
 
@@ -500,13 +500,20 @@ function generarMapa(){
    En Safari/Firefox el pill se queda con su frosted glass base.
    ============================================================== */
 function esChromium(){
+  // iOS primero: TODOS los navegadores de iPhone/iPad (Chrome incluido,
+  // que ahí es CriOS sobre WebKit) carecen de backdrop-filter:url() —
+  // fallback frosted siempre
+  const ua = navigator.userAgent;
+  const esIOS = /iPhone|iPad|iPod|CriOS|FxiOS|EdgiOS/.test(ua)
+    || (/Mac/.test(navigator.platform) && navigator.maxTouchPoints > 1);
+  if (esIOS) return false;
   // Vía moderna: Client Hints declara la marca "Chromium"
   if (navigator.userAgentData?.brands){
     return navigator.userAgentData.brands.some(b => /Chromium/i.test(b.brand));
   }
-  // Vía clásica: "Chrome/" aparece en todos los Chromium (Chrome, Edge,
-  // Opera, Brave...) y nunca en Safari ni Firefox reales
-  return /Chrome\/\d+/.test(navigator.userAgent);
+  // Vía clásica: "Chrome/" aparece en todos los Chromium de verdad
+  // (Chrome, Edge, Opera, Brave...) y nunca en Safari ni Firefox
+  return /Chrome\/\d+/.test(ua);
 }
 
 // Idioma del documento: el envoltorio del artefacto no lo declara
@@ -522,7 +529,7 @@ if (esChromium()){
   feImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataURL);
   pill.classList.add('refracta');
 } else {
-  hint.innerHTML = '✦ <b>Arrastra el pill</b> · refracción SVG no soportada aquí: modo frosted glass';
+  hint.innerHTML = '✦ <b>Arrastra el pill</b> · este navegador no soporta la refracción SVG (frosted glass) — pruébalo en Chrome/Edge de escritorio';
 }
 
 /* ==============================================================
@@ -622,6 +629,54 @@ pill.querySelectorAll('button').forEach(btn => {
     hint.innerHTML = '✦ Pulsaste «<b>' + btn.getAttribute('aria-label') + '</b>» — sigue arrastrando el pill';
   });
 });
+
+/* ==============================================================
+   4) BARRIDO DE PRESENTACIÓN
+   --------------------------------------------------------------
+   Al cargar, el pill sube hasta el primer texto y hace un pequeño
+   vaivén lateral: así la refracción se ve sola, sin que el usuario
+   tenga que descubrirla arrastrando. Se cancela al primer toque y
+   se omite si el sistema pide menos movimiento.
+   ============================================================== */
+(function presentacion(){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const DURACION = 2600;                       // ms del recorrido completo
+  const SUBIDA = -Math.min(180, innerHeight * .22);  // hasta rozar el contenido
+  let inicio = null, activo = true;
+  let ultimaX = 0, ultimaY = 0;                // última posición pintada
+
+  // cualquier interacción del usuario corta la presentación: el arrastre
+  // continúa desde donde estaba el pill, sin saltos
+  pill.addEventListener('pointerdown', () => {
+    if (!activo) return;
+    activo = false;
+    baseX = ultimaX;
+    baseY = ultimaY;
+  }, { capture:true });
+
+  const suave = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;  // easeInOut
+
+  function paso(ts){
+    if (!activo) return;                       // el usuario tomó el control
+    if (inicio === null) inicio = ts;
+    const p = Math.min(1, (ts - inicio) / DURACION);
+    // trayectoria: sube (0→.3), vaivén lateral (.3→.85), vuelve a casa (.85→1)
+    let dx = 0, dy = 0;
+    if (p < .3){
+      dy = SUBIDA * suave(p / .3);
+    } else if (p < .85){
+      dy = SUBIDA;
+      dx = Math.sin(((p - .3) / .55) * Math.PI * 2) * 70;   // ida y vuelta
+    } else {
+      dy = SUBIDA * (1 - suave((p - .85) / .15));
+    }
+    [ultimaX, ultimaY] = aplicar(dx, dy);
+    if (p < 1) requestAnimationFrame(paso);
+    else { activo = false; baseX = 0; baseY = 0; aplicar(0, 0); }
+  }
+  requestAnimationFrame(paso);
+})();
 </script>
 </body>
 </html>
