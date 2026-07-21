@@ -110,7 +110,7 @@
     transform:translateX(-50%);
     font-size:.8rem;
     color:var(--tenue);
-    background:rgba(11,13,22,.55);
+    background:rgba(11,13,22,.8);
     backdrop-filter:blur(8px);
     -webkit-backdrop-filter:blur(8px);
     border:1px solid var(--linea);
@@ -119,6 +119,9 @@
     z-index:50;
     pointer-events:none;
     white-space:nowrap;
+    max-width:calc(100vw - 32px);   /* que no se recorte en pantallas estrechas */
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
   .hint b{ color:var(--papel); font-weight:600; }
 
@@ -176,13 +179,22 @@
     inset:0;
     border-radius:inherit;
     pointer-events:none;
-    background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,0) 45%);
+    background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 40%);
   }
 
   /* REFRACCIÓN — enhancement solo-Chromium (se activa desde JS).
      El filtro SVG deforma el backdrop; blur/saturate/brightness rematan el vidrio */
   .pill.refracta{
-    backdrop-filter:url(#lente) blur(1px) saturate(160%) brightness(1.05);
+    /* OJO: nada de blur() encadenado aquí — degrada la resolución del
+       snapshot en Chromium y emborrona el centro. El frost vive dentro
+       del propio filtro SVG (feGaussianBlur 0.3) */
+    backdrop-filter:url(#lente) saturate(160%) brightness(1.05);
+    /* Sin sombra de elevación: Chromium incluye la sombra del propio
+       elemento en el snapshot del backdrop y la lente la magnificaría
+       como una mancha oscura en el anillo inferior */
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.5),
+      inset 0 -1px 1px rgba(0,0,0,.12);
   }
 
   /* Botones del pill */
@@ -199,11 +211,16 @@
     place-items:center;
     cursor:pointer;
     transition:background .15s ease, transform .1s ease;
-    text-shadow:0 1px 2px rgba(0,0,0,.35);
+    text-shadow:0 1px 2px rgba(0,0,0,.55), 0 0 8px rgba(0,0,0,.4);
   }
   .pill button:hover{ background:rgba(255,255,255,.18); }
   .pill button:active{ transform:scale(.92); }
-  .pill button:focus-visible{ outline:2px solid rgba(255,255,255,.7); outline-offset:2px; }
+  .pill button:focus-visible{
+    outline:2px solid #fff;
+    outline-offset:2px;
+    box-shadow:0 0 0 5px rgba(0,0,0,.55);   /* halo oscuro: foco visible sobre fondos claros */
+  }
+  .pill:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
 
   /* ---------- Accesibilidad ---------- */
   /* Si el usuario pide menos transparencia: material sólido, sin filtros */
@@ -229,20 +246,52 @@
      - color-interpolation-filters="sRGB" es OBLIGATORIO: el default
        (linearRGB) re-mapea el gris 128 del mapa y rompe el punto neutro,
        produciendo un desplazamiento global falso.
+     - filterUnits="userSpaceOnUse" con la región a 300×60 exactos:
+       en backdrop-filter, Chromium pinta el feImage a su tamaño natural,
+       así que mapa, feImage y elemento deben medir LO MISMO para que el
+       anillo refractivo caiga justo en el borde del pill (con unidades
+       de bounding box el mapa queda desalineado y la deformación "flota").
      - feImage recibe el mapa (canvas → dataURL) desde JS.
      - feDisplacementMap lee el desplazamiento X del canal R y el Y del G.
+     - ABERRACIÓN CROMÁTICA: tres pasadas de desplazamiento con escalas
+       ligeramente distintas (29/30/31). De cada una conservamos un solo
+       canal (R, G o B) y las sumamos: los bordes refractados muestran un
+       fleco de color sutil, como en el vidrio real (la luz roja y la azul
+       no se doblan igual). Las matrices mantienen alfa=1 para no perder
+       color al premultiplicar en el feComposite aritmético.
      ============================================================ -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <filter id="lente" color-interpolation-filters="sRGB"
-          x="0" y="0" width="100%" height="100%">
-    <feImage id="mapaLente" x="0" y="0" width="100%" height="100%"
-             preserveAspectRatio="none" result="mapa"/>
-    <feDisplacementMap in="SourceGraphic" in2="mapa"
-                       scale="60" xChannelSelector="R" yChannelSelector="G"/>
+          filterUnits="userSpaceOnUse" x="0" y="0" width="300" height="60">
+    <feImage id="mapaLente" x="0" y="0" width="300" height="60" result="mapa"/>
+    <!-- Frost sutil DENTRO del filtro. Importante: encadenar blur() fuera
+         (backdrop-filter: url() blur(1px)) hace que Chromium procese el
+         snapshot a baja resolución y emborrona todo el interior; un
+         feGaussianBlur mínimo aquí dentro no tiene ese problema -->
+    <feGaussianBlur in="SourceGraphic" stdDeviation="0.3" result="frost"/>
+    <feDisplacementMap in="frost" in2="mapa"
+                       scale="29" xChannelSelector="R" yChannelSelector="G" result="dR"/>
+    <feDisplacementMap in="frost" in2="mapa"
+                       scale="30" xChannelSelector="R" yChannelSelector="G" result="dG"/>
+    <feDisplacementMap in="frost" in2="mapa"
+                       scale="31" xChannelSelector="R" yChannelSelector="G" result="dB"/>
+    <!-- Las matrices PRESERVAN el alfa original (fila "0 0 0 1 0"): si se
+         fuerza alfa=1, las muestras que caen fuera de la región del filtro
+         (transparentes) se vuelven negro opaco y manchan las tapas -->
+    <feColorMatrix in="dR" type="matrix"
+      values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="soloR"/>
+    <feColorMatrix in="dG" type="matrix"
+      values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="soloG"/>
+    <feColorMatrix in="dB" type="matrix"
+      values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="soloB"/>
+    <feComposite in="soloR" in2="soloG" operator="arithmetic"
+                 k1="0" k2="1" k3="1" k4="0" result="rg"/>
+    <feComposite in="rg" in2="soloB" operator="arithmetic"
+                 k1="0" k2="1" k3="1" k4="0"/>
   </filter>
 </svg>
 
-<div class="hint" id="hint">✦ <b>Arrastra el pill</b> y pásalo sobre el texto</div>
+<div class="hint" id="hint" role="status">✦ <b>Arrastra el pill</b> (o enfócalo y usa las flechas)</div>
 
 <main>
   <header>
@@ -258,9 +307,10 @@
   <div class="tarjeta g1">
     <h2>El bisel es el truco</h2>
     <p>
-      La deformación es máxima en los ~18 px del borde y cae a cero en el
-      centro con un perfil suave (smoothstep). Por eso el contenido bajo el
-      centro del pill se lee sin distorsión y solo los bordes «tiran» de él.
+      La deformación vive solo en los ~14 px del borde y sigue la ley de
+      Snell de un bisel de vidrio real (n = 1.5): casi nula al empezar el
+      anillo y disparada junto a la orilla. El centro es vidrio plano, por
+      eso el contenido bajo el pill se lee perfecto y solo el borde lo curva.
     </p>
   </div>
 
@@ -279,7 +329,9 @@
     <p>
       Un canvas calcula la distancia con signo a un rectángulo redondeado.
       El canal R codifica el desplazamiento horizontal y el G el vertical,
-      con 128 como punto neutro. feDisplacementMap hace el resto.
+      con 128 como punto neutro. Tres pasadas de feDisplacementMap con
+      escalas distintas separan R, G y B: el fleco de color del borde es
+      aberración cromática, como en una lente de verdad.
     </p>
   </div>
 
@@ -332,7 +384,7 @@
 </main>
 
 <!-- El pill de controles: compartir / cerrar / brújula -->
-<div class="pill" id="pill" role="toolbar" aria-label="Controles flotantes">
+<div class="pill" id="pill" role="group" aria-label="Controles flotantes (con foco: flechas para mover)" tabindex="0">
   <button type="button" aria-label="Compartir" title="Compartir">⇧</button>
   <button type="button" aria-label="Cerrar" title="Cerrar">✕</button>
   <button type="button" aria-label="Brújula" title="Brújula">◎</button>
@@ -344,18 +396,29 @@
    --------------------------------------------------------------
    Para cada píxel del pill calculamos la SDF (distancia con signo)
    de un rectángulo redondeado. Con ella obtenemos:
-     - intensidad: 0 en el centro, máxima en el borde, con perfil
-       smoothstep dentro de un bisel de ~18 px (lente convexa).
-     - dirección: la normal exterior de la superficie (gradiente
-       de la SDF), que dice HACIA DÓNDE muestrear el fondo.
+
+   - INTENSIDAD: 0 en todo el centro (vidrio plano) y creciente solo
+     dentro del bisel de ~14 px, siguiendo la ley de Snell para un
+     bisel circular de vidrio (n = 1.5): la desviación real del rayo
+     es casi nula al empezar el bisel y se dispara junto al borde.
+     Esto concentra la deformación en un anillo pegado a la orilla,
+     que es como se comporta una pieza de vidrio de verdad.
+
+   - DIRECCIÓN: HACIA DENTRO (la normal interior). Cada píxel del
+     anillo muestrea contenido más cercano al centro, lo que estira
+     el fondo hacia el borde: efecto lupa. Además evita el artefacto
+     de Chromium al muestrear fuera del elemento (clamp de borde),
+     porque todas las muestras caen dentro del pill.
+
    Codificación: R = 128 + nx·intensidad·127  (desplazamiento X)
                  G = 128 + ny·intensidad·127  (desplazamiento Y)
    128 es el punto neutro (sin desplazamiento).
    ============================================================== */
 
 const ANCHO = 300, ALTO = 60;    // tamaño real del pill (px CSS)
-const BISEL = 18;                // grosor del "anillo" refractivo
-const SS = 2;                    // supersampling ×2 para bordes suaves
+const BISEL = 14;                // grosor del "anillo" refractivo
+const SS = 2;                    // supermuestreo interno ×2 (antialias del mapa)
+const N_VIDRIO = 1.5;            // índice de refracción del vidrio
 
 // SDF de rectángulo redondeado (fórmula clásica de Iñigo Quílez).
 // Devuelve <0 dentro, 0 en el borde, >0 fuera.
@@ -366,9 +429,15 @@ function sdfPill(x, y, cx, cy, hx, hy, r){
   return Math.hypot(ax, ay) + Math.min(Math.max(qx, qy), 0) - r;
 }
 
-function smoothstep(a, b, x){
-  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
-  return t * t * (3 - 2 * t);
+// Perfil de lente físico. s ∈ [0,1]: 0 = inicio del bisel, 1 = borde.
+// En un bisel circular la superficie se inclina θ = asin(s); el rayo
+// refractado se desvía δ = θ − asin(sin θ / n) y el corrimiento lateral
+// crece como tan(δ). Se normaliza para que el borde valga 1.
+const _SMAX = 0.9999;
+const _NORM = Math.tan(Math.asin(_SMAX) - Math.asin(_SMAX / N_VIDRIO));
+function perfilLente(s){
+  const th = Math.asin(Math.min(s, _SMAX));
+  return Math.tan(th - Math.asin(Math.sin(th) / N_VIDRIO)) / _NORM;
 }
 
 function generarMapa(){
@@ -390,20 +459,18 @@ function generarMapa(){
       const d = sdf(x + .5, y + .5);
       let nx = 0, ny = 0, t = 0;
 
-      if (d < 0){
-        // Intensidad: 0 en el interior profundo, 1 justo en el borde.
-        // smoothstep da el perfil suave de lente convexa.
-        t = smoothstep(-bisel, 0, d);
-        if (t > 0){
-          // Dirección: gradiente numérico de la SDF = normal exterior
-          const gx = sdf(x + 1.5, y + .5) - sdf(x - .5, y + .5);
-          const gy = sdf(x + .5, y + 1.5) - sdf(x + .5, y - .5);
-          const len = Math.hypot(gx, gy) || 1;
-          nx = gx / len;
-          ny = gy / len;
-        }
+      if (d < 0 && d > -bisel){
+        const s = (d + bisel) / bisel;   // 0 interior → 1 borde
+        t = perfilLente(s);
+        // Gradiente numérico de la SDF = normal exterior…
+        const gx = sdf(x + 1.5, y + .5) - sdf(x - .5, y + .5);
+        const gy = sdf(x + .5, y + 1.5) - sdf(x + .5, y - .5);
+        const len = Math.hypot(gx, gy) || 1;
+        // …negada: muestreamos hacia el CENTRO (efecto lupa)
+        nx = -gx / len;
+        ny = -gy / len;
       }
-      // Fuera del pill (d ≥ 0) y en el centro: neutro (128,128)
+      // Fuera del pill (d ≥ 0) y en el centro plano: neutro (128,128)
 
       const i = (y * W + x) * 4;
       px[i    ] = Math.round(128 + nx * t * 127);  // R → desplazamiento X
@@ -414,7 +481,16 @@ function generarMapa(){
   }
 
   ctx.putImageData(img, 0, 0);
-  return canvas.toDataURL();     // PNG en data-URI, sin ficheros externos
+
+  // Reescalado al tamaño exacto del pill (300×60): el supermuestreo se
+  // queda como antialias y el mapa encaja 1:1 con la región del filtro
+  const fin = document.createElement('canvas');
+  fin.width = ANCHO; fin.height = ALTO;
+  const fctx = fin.getContext('2d');
+  fctx.imageSmoothingEnabled = true;
+  fctx.imageSmoothingQuality = 'high';
+  fctx.drawImage(canvas, 0, 0, ANCHO, ALTO);
+  return fin.toDataURL();        // PNG en data-URI, sin ficheros externos
 }
 
 /* ==============================================================
@@ -432,6 +508,9 @@ function esChromium(){
   // Opera, Brave...) y nunca en Safari ni Firefox reales
   return /Chrome\/\d+/.test(navigator.userAgent);
 }
+
+// Idioma del documento: el envoltorio del artefacto no lo declara
+if (!document.documentElement.lang) document.documentElement.lang = 'es';
 
 const pill = document.getElementById('pill');
 const hint = document.getElementById('hint');
@@ -454,43 +533,87 @@ if (esChromium()){
    backdrop automáticamente en cada frame.
    ============================================================== */
 let arrastrando = false;
+let idActivo = null;             // pointerId del arrastre en curso (multi-touch seguro)
 let inicioX = 0, inicioY = 0;    // posición del puntero al empezar
 let baseX = 0, baseY = 0;        // offset acumulado del pill
 let seMovio = false;             // para no disparar clicks tras un arrastre
 
+// Mantiene el pill dentro del viewport (margen mínimo de 8px): sin esto
+// se puede soltar fuera de la ventana y queda irrecuperable
+function clampear(dx, dy){
+  const baseLeft = innerWidth / 2 - ANCHO / 2;   // posición CSS sin arrastre
+  const baseTop  = innerHeight - 28 - ALTO;      // (left:50% / bottom:28px)
+  const minDx = 8 - baseLeft, maxDx = (innerWidth  - ANCHO - 8) - baseLeft;
+  const minDy = 8 - baseTop,  maxDy = (innerHeight - ALTO  - 8) - baseTop;
+  return [Math.min(maxDx, Math.max(minDx, dx)),
+          Math.min(maxDy, Math.max(minDy, dy))];
+}
+
+function aplicar(dx, dy){
+  [dx, dy] = clampear(dx, dy);
+  pill.style.setProperty('--dx', dx + 'px');
+  pill.style.setProperty('--dy', dy + 'px');
+  return [dx, dy];
+}
+
 pill.addEventListener('pointerdown', (e) => {
+  // Solo botón principal y puntero primario: el click derecho debe abrir su
+  // menú sin iniciar arrastre, y un segundo dedo no roba el gesto en curso
+  if (e.button !== 0 || !e.isPrimary || arrastrando) return;
   arrastrando = true;
+  idActivo = e.pointerId;
   seMovio = false;
   inicioX = e.clientX;
   inicioY = e.clientY;
-  pill.setPointerCapture(e.pointerId);   // seguimos el dedo aunque salga del pill
+  // OJO: aún NO capturamos el puntero. Si se captura en pointerdown, el
+  // click derivado se retargetea al pill y los botones hijos jamás
+  // recibirían clicks de ratón. La captura se toma al superar el umbral.
 });
 
 pill.addEventListener('pointermove', (e) => {
-  if (!arrastrando) return;
+  if (!arrastrando || e.pointerId !== idActivo) return;
   const dx = e.clientX - inicioX;
   const dy = e.clientY - inicioY;
-  if (Math.abs(dx) + Math.abs(dy) > 5) seMovio = true;
-  pill.style.setProperty('--dx', (baseX + dx) + 'px');
-  pill.style.setProperty('--dy', (baseY + dy) + 'px');
+  if (!seMovio && Math.abs(dx) + Math.abs(dy) > 5){
+    seMovio = true;
+    pill.setPointerCapture(e.pointerId);  // ahora sí: seguimos el dedo fuera del pill
+  }
+  if (seMovio) aplicar(baseX + dx, baseY + dy);
 });
 
 function soltar(e){
-  if (!arrastrando) return;
+  if (!arrastrando || e.pointerId !== idActivo) return;
   arrastrando = false;
-  baseX += e.clientX - inicioX;
-  baseY += e.clientY - inicioY;
+  idActivo = null;
+  if (seMovio){
+    [baseX, baseY] = clampear(baseX + e.clientX - inicioX,
+                              baseY + e.clientY - inicioY);
+  }
 }
 pill.addEventListener('pointerup', soltar);
 pill.addEventListener('pointercancel', soltar);
 
-// Si hubo arrastre real, cancelamos el click fantasma sobre los botones
+// Si hubo arrastre real, cancelamos el click fantasma que llega retargeteado
+// al pill, y re-armamos el flag: el siguiente click (p. ej. Enter desde
+// teclado, que no genera pointerdown) debe funcionar con normalidad
 pill.addEventListener('click', (e) => {
   if (seMovio){
     e.stopPropagation();
     e.preventDefault();
+    seMovio = false;
   }
 }, true);
+
+// Alternativa de teclado (WCAG 2.1.1): con el foco en el pill o en sus
+// botones, las flechas mueven el cristal; Shift acelera el paso
+pill.addEventListener('keydown', (e) => {
+  const paso = e.shiftKey ? 24 : 8;
+  const mov = { ArrowLeft:[-paso,0], ArrowRight:[paso,0],
+                ArrowUp:[0,-paso],   ArrowDown:[0,paso] }[e.key];
+  if (!mov) return;
+  e.preventDefault();
+  [baseX, baseY] = aplicar(baseX + mov[0], baseY + mov[1]);
+});
 
 // Los botones son demostrativos: un pequeño feedback en el hint
 pill.querySelectorAll('button').forEach(btn => {
