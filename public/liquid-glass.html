@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid Glass — Refracción SVG</title>
+<style>
+  /* ============================================================
+     LIQUID GLASS (estilo iOS 26) — demo autocontenida
+     Técnica: backdrop-filter: url(#filtroSVG) con feDisplacementMap
+     alimentado por un mapa de desplazamiento generado en <canvas>.
+     ============================================================ */
+
+  :root{
+    --tinta:#0b0d16;          /* fondo general, tinta profunda con sesgo azul */
+    --papel:#f2f4fb;          /* texto principal */
+    --tenue:#9aa3bd;          /* texto secundario */
+    --linea:rgba(255,255,255,.08);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:var(--tinta);
+    color:var(--papel);
+    /* Stack de sistema: en Apple renderiza SF, el material nativo del efecto */
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    /* Fondo con leves halos de color para que el cristal tenga algo que refractar
+       incluso entre tarjetas */
+    background-image:
+      radial-gradient(60rem 40rem at 80% -10%, rgba(64,96,255,.16), transparent 60%),
+      radial-gradient(50rem 36rem at 0% 45%, rgba(255,64,150,.10), transparent 60%);
+    background-attachment:fixed;
+  }
+
+  /* ---------- Contenido de prueba: 200vh de scroll ---------- */
+  main{
+    max-width:680px;
+    margin:0 auto;
+    padding:96px 24px 40vh;   /* aire final para poder pasar tarjetas bajo el pill */
+    min-height:200vh;
+  }
+
+  header h1{
+    font-size:clamp(2.2rem,6vw,3.4rem);
+    line-height:1.08;
+    letter-spacing:-.02em;
+    margin:0 0 .5rem;
+    text-wrap:balance;
+  }
+  header p.bajada{
+    color:var(--tenue);
+    font-size:1.05rem;
+    max-width:52ch;
+    margin:0 0 3rem;
+  }
+  .etiqueta{
+    display:inline-block;
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--tenue);
+    border:1px solid var(--linea);
+    border-radius:999px;
+    padding:.3em 1em;
+    margin-bottom:1.2rem;
+  }
+
+  /* Tarjetas con gradientes vivos: el "paisaje" que el cristal deforma */
+  .tarjeta{
+    border-radius:22px;
+    padding:28px 28px 24px;
+    margin:2.2rem 0;
+    color:#fff;
+  }
+  .tarjeta h2{ margin:0 0 .4rem; font-size:1.5rem; letter-spacing:-.01em; }
+  .tarjeta p{ margin:.4rem 0 0; color:rgba(255,255,255,.92); max-width:58ch; }
+  .g1{ background:linear-gradient(135deg,#ff5e62,#d543a8); }
+  .g2{ background:linear-gradient(135deg,#38e4ff,#3b6cff); }
+  .g3{ background:linear-gradient(135deg,#c6f44d,#12b886); color:#062b1f; }
+  .g3 p{ color:rgba(6,43,31,.85); }
+  .g4{ background:linear-gradient(135deg,#ffb347,#ff5e9e); }
+
+  /* Sección de líneas regladas: la rejilla de texto fino es lo que mejor
+     revela el "lensing" en el bisel del cristal */
+  .regladas{
+    border-top:1px solid var(--linea);
+    border-bottom:1px solid var(--linea);
+    padding:1.4rem 0;
+    margin:2.4rem 0;
+  }
+  .regladas p{
+    margin:.15rem 0;
+    font-size:.92rem;
+    color:var(--tenue);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .prosa p{ max-width:65ch; color:#cdd4e8; }
+
+  /* ---------- Hint superior ---------- */
+  .hint{
+    position:fixed;
+    top:14px; left:50%;
+    transform:translateX(-50%);
+    font-size:.8rem;
+    color:var(--tenue);
+    background:rgba(11,13,22,.55);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    border:1px solid var(--linea);
+    border-radius:999px;
+    padding:.35em 1.1em;
+    z-index:50;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .hint b{ color:var(--papel); font-weight:600; }
+
+  /* ============================================================
+     EL PILL — material "Liquid Glass"
+     ============================================================ */
+  .pill{
+    position:fixed;
+    left:50%;
+    bottom:28px;
+    width:300px;
+    height:60px;
+    border-radius:999px;
+    z-index:100;
+    /* La posición de arrastre vive en variables: el mapa de desplazamiento
+       NUNCA se regenera al mover, solo cambia el transform */
+    --dx:0px; --dy:0px;
+    transform:translate(calc(-50% + var(--dx)), var(--dy));
+    touch-action:none;          /* necesario para arrastre táctil con pointer events */
+    cursor:grab;
+    user-select:none;
+    -webkit-user-select:none;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-around;
+    padding:0 14px;
+
+    /* Fidelidad del material:
+       - fondo casi transparente (nunca opaco)
+       - borde claro fino
+       - rim especular arriba (inset claro) + sombra interna abajo (inset oscuro)
+       - sombra de elevación amplia */
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.25);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.45),
+      inset 0 -1px 1px rgba(0,0,0,.18),
+      0 10px 34px rgba(0,0,0,.45);
+
+    /* FALLBACK universal (Safari / Firefox): frosted glass clásico.
+       La refracción SVG se añade después como enhancement solo en Chromium. */
+    backdrop-filter:blur(10px) saturate(160%);
+    -webkit-backdrop-filter:blur(10px) saturate(160%);
+  }
+  .pill:active{ cursor:grabbing; }
+
+  /* REFRACCIÓN — enhancement solo-Chromium (se activa desde JS).
+     El filtro SVG deforma el backdrop; blur/saturate/brightness rematan el vidrio */
+  .pill.refracta{
+    backdrop-filter:url(#lente) blur(2px) saturate(150%) brightness(1.04);
+  }
+
+  /* Botones del pill */
+  .pill button{
+    appearance:none;
+    border:0;
+    background:transparent;
+    color:#fff;
+    width:44px; height:44px;
+    border-radius:50%;
+    font-size:19px;
+    line-height:1;
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+    transition:background .15s ease, transform .1s ease;
+    text-shadow:0 1px 2px rgba(0,0,0,.35);
+  }
+  .pill button:hover{ background:rgba(255,255,255,.18); }
+  .pill button:active{ transform:scale(.92); }
+  .pill button:focus-visible{ outline:2px solid rgba(255,255,255,.7); outline-offset:2px; }
+
+  /* ---------- Accesibilidad ---------- */
+  /* Si el usuario pide menos transparencia: material sólido, sin filtros */
+  @media (prefers-reduced-transparency: reduce){
+    .pill, .pill.refracta{
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      background:rgba(40,44,60,.96);
+      box-shadow:0 10px 34px rgba(0,0,0,.45);
+    }
+    .hint{ backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(11,13,22,.95); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .pill button{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     FILTRO SVG DE REFRACCIÓN
+     - color-interpolation-filters="sRGB" es OBLIGATORIO: el default
+       (linearRGB) re-mapea el gris 128 del mapa y rompe el punto neutro,
+       produciendo un desplazamiento global falso.
+     - feImage recibe el mapa (canvas → dataURL) desde JS.
+     - feDisplacementMap lee el desplazamiento X del canal R y el Y del G.
+     ============================================================ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="lente" color-interpolation-filters="sRGB"
+          x="0" y="0" width="100%" height="100%">
+    <feImage id="mapaLente" x="0" y="0" width="100%" height="100%"
+             preserveAspectRatio="none" result="mapa"/>
+    <feDisplacementMap in="SourceGraphic" in2="mapa"
+                       scale="60" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<div class="hint" id="hint">✦ <b>Arrastra el pill</b> y pásalo sobre el texto</div>
+
+<main>
+  <header>
+    <span class="etiqueta">Demo técnica</span>
+    <h1>Liquid Glass con refracción real</h1>
+    <p class="bajada">
+      No es solo blur: el borde del cristal dobla la luz. Arrastra el pill sobre
+      las líneas de texto y observa cómo se curvan en el bisel, mientras el
+      centro queda ópticamente plano — igual que una lente convexa.
+    </p>
+  </header>
+
+  <div class="tarjeta g1">
+    <h2>El bisel es el truco</h2>
+    <p>
+      La deformación es máxima en los ~18 px del borde y cae a cero en el
+      centro con un perfil suave (smoothstep). Por eso el contenido bajo el
+      centro del pill se lee sin distorsión y solo los bordes «tiran» de él.
+    </p>
+  </div>
+
+  <div class="regladas" aria-hidden="true">
+    <p>────────── línea de calibración ── pasa el pill por aquí ── la deformación se ve en el borde ──────────</p>
+    <p>0123456789 · 0123456789 · 0123456789 · 0123456789 · 0123456789 · 0123456789 · 0123456789</p>
+    <p>la refracción curva estas líneas — la refracción curva estas líneas — la refracción curva estas líneas</p>
+    <p>||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||</p>
+    <p>abcdefghijklmnñopqrstuvwxyz abcdefghijklmnñopqrstuvwxyz abcdefghijklmnñopqrstuvwxyz</p>
+    <p>0123456789 · 0123456789 · 0123456789 · 0123456789 · 0123456789 · 0123456789 · 0123456789</p>
+    <p>────────── línea de calibración ── pasa el pill por aquí ── la deformación se ve en el borde ──────────</p>
+  </div>
+
+  <div class="tarjeta g2">
+    <h2>Mapa de desplazamiento por SDF</h2>
+    <p>
+      Un canvas calcula la distancia con signo a un rectángulo redondeado.
+      El canal R codifica el desplazamiento horizontal y el G el vertical,
+      con 128 como punto neutro. feDisplacementMap hace el resto.
+    </p>
+  </div>
+
+  <section class="prosa">
+    <p>
+      Apple presentó este material como una capa que «concentra y dobla la luz
+      del contenido que tiene debajo». La clave de la imitación web está en
+      <code>backdrop-filter: url(#filtro)</code>: en lugar de aplicar el filtro
+      al elemento, se aplica a la porción de página que queda detrás de él.
+    </p>
+    <p>
+      Como los filtros SVG en backdrop-filter solo funcionan en Chromium, la
+      base del pill lleva un frosted glass clásico (blur + saturate) que Safari
+      y Firefox sí entienden, y la refracción se añade encima únicamente cuando
+      el navegador puede con ella. Progressive enhancement de manual.
+    </p>
+  </section>
+
+  <div class="tarjeta g3">
+    <h2>Gradientes para delatar al cristal</h2>
+    <p>
+      Sobre un fondo plano la refracción es invisible. Sobre gradientes vivos
+      y texto fino, cada píxel desplazado se nota. Desliza el pill por el borde
+      de esta tarjeta y mira cómo la frontera de color se ondula.
+    </p>
+  </div>
+
+  <div class="tarjeta g4">
+    <h2>Sigue bajando</h2>
+    <p>
+      La página mide 200vh a propósito: haz scroll con el pill quieto y verás
+      el contenido fluir a través de la lente, que es como mejor se aprecia el
+      efecto en movimiento.
+    </p>
+  </div>
+
+  <section class="prosa">
+    <p>
+      Un detalle de rendimiento: el mapa de desplazamiento se genera una sola
+      vez al cargar. Arrastrar el pill solo actualiza dos variables CSS de
+      transform — el navegador re-muestrea el backdrop por su cuenta, sin que
+      JavaScript vuelva a tocar el canvas.
+    </p>
+    <p>
+      Y un detalle de respeto: si tu sistema tiene activado «reducir
+      transparencia», el pill se vuelve sólido y desactiva todos los filtros.
+      El efecto es un lujo, no una barrera.
+    </p>
+  </section>
+</main>
+
+<!-- El pill de controles: compartir / cerrar / brújula -->
+<div class="pill" id="pill" role="toolbar" aria-label="Controles flotantes">
+  <button type="button" aria-label="Compartir" title="Compartir">⇧</button>
+  <button type="button" aria-label="Cerrar" title="Cerrar">✕</button>
+  <button type="button" aria-label="Brújula" title="Brújula">◎</button>
+</div>
+
+<script>
+/* ==============================================================
+   1) MAPA DE DESPLAZAMIENTO (canvas → feImage)
+   --------------------------------------------------------------
+   Para cada píxel del pill calculamos la SDF (distancia con signo)
+   de un rectángulo redondeado. Con ella obtenemos:
+     - intensidad: 0 en el centro, máxima en el borde, con perfil
+       smoothstep dentro de un bisel de ~18 px (lente convexa).
+     - dirección: la normal exterior de la superficie (gradiente
+       de la SDF), que dice HACIA DÓNDE muestrear el fondo.
+   Codificación: R = 128 + nx·intensidad·127  (desplazamiento X)
+                 G = 128 + ny·intensidad·127  (desplazamiento Y)
+   128 es el punto neutro (sin desplazamiento).
+   ============================================================== */
+
+const ANCHO = 300, ALTO = 60;    // tamaño real del pill (px CSS)
+const BISEL = 18;                // grosor del "anillo" refractivo
+const SS = 2;                    // supersampling ×2 para bordes suaves
+
+// SDF de rectángulo redondeado (fórmula clásica de Iñigo Quílez).
+// Devuelve <0 dentro, 0 en el borde, >0 fuera.
+function sdfPill(x, y, cx, cy, hx, hy, r){
+  const qx = Math.abs(x - cx) - (hx - r);
+  const qy = Math.abs(y - cy) - (hy - r);
+  const ax = Math.max(qx, 0), ay = Math.max(qy, 0);
+  return Math.hypot(ax, ay) + Math.min(Math.max(qx, qy), 0) - r;
+}
+
+function smoothstep(a, b, x){
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
+
+function generarMapa(){
+  const W = ANCHO * SS, H = ALTO * SS;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(W, H);
+  const px = img.data;
+
+  const cx = W / 2, cy = H / 2;
+  const hx = W / 2, hy = H / 2;
+  const r  = H / 2;              // radio = mitad del alto → forma de pill
+  const bisel = BISEL * SS;
+  const sdf = (x, y) => sdfPill(x, y, cx, cy, hx, hy, r);
+
+  for (let y = 0; y < H; y++){
+    for (let x = 0; x < W; x++){
+      const d = sdf(x + .5, y + .5);
+      let nx = 0, ny = 0, t = 0;
+
+      if (d < 0){
+        // Intensidad: 0 en el interior profundo, 1 justo en el borde.
+        // smoothstep da el perfil suave de lente convexa.
+        t = smoothstep(-bisel, 0, d);
+        if (t > 0){
+          // Dirección: gradiente numérico de la SDF = normal exterior
+          const gx = sdf(x + 1.5, y + .5) - sdf(x - .5, y + .5);
+          const gy = sdf(x + .5, y + 1.5) - sdf(x + .5, y - .5);
+          const len = Math.hypot(gx, gy) || 1;
+          nx = gx / len;
+          ny = gy / len;
+        }
+      }
+      // Fuera del pill (d ≥ 0) y en el centro: neutro (128,128)
+
+      const i = (y * W + x) * 4;
+      px[i    ] = Math.round(128 + nx * t * 127);  // R → desplazamiento X
+      px[i + 1] = Math.round(128 + ny * t * 127);  // G → desplazamiento Y
+      px[i + 2] = 128;                              // B sin uso
+      px[i + 3] = 255;                              // opaco
+    }
+  }
+
+  ctx.putImageData(img, 0, 0);
+  return canvas.toDataURL();     // PNG en data-URI, sin ficheros externos
+}
+
+/* ==============================================================
+   2) ACTIVACIÓN DE LA REFRACCIÓN (solo Chromium)
+   --------------------------------------------------------------
+   backdrop-filter: url(#svg) solo está implementado en Chromium.
+   En Safari/Firefox el pill se queda con su frosted glass base.
+   ============================================================== */
+function esChromium(){
+  // Vía moderna: Client Hints declara la marca "Chromium"
+  if (navigator.userAgentData?.brands){
+    return navigator.userAgentData.brands.some(b => /Chromium/i.test(b.brand));
+  }
+  // Vía clásica: "Chrome/" aparece en todos los Chromium (Chrome, Edge,
+  // Opera, Brave...) y nunca en Safari ni Firefox reales
+  return /Chrome\/\d+/.test(navigator.userAgent);
+}
+
+const pill = document.getElementById('pill');
+const hint = document.getElementById('hint');
+
+if (esChromium()){
+  const dataURL = generarMapa();
+  const feImage = document.getElementById('mapaLente');
+  // setAttributeNS con el namespace xlink: máxima compatibilidad para feImage
+  feImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataURL);
+  pill.classList.add('refracta');
+} else {
+  hint.innerHTML = '✦ <b>Arrastra el pill</b> · refracción SVG no soportada aquí: modo frosted glass';
+}
+
+/* ==============================================================
+   3) ARRASTRE CON POINTER EVENTS (mouse + touch unificados)
+   --------------------------------------------------------------
+   IMPORTANTE: al arrastrar NO se regenera el mapa. Solo movemos el
+   pill con variables CSS de transform; el navegador re-muestrea el
+   backdrop automáticamente en cada frame.
+   ============================================================== */
+let arrastrando = false;
+let inicioX = 0, inicioY = 0;    // posición del puntero al empezar
+let baseX = 0, baseY = 0;        // offset acumulado del pill
+let seMovio = false;             // para no disparar clicks tras un arrastre
+
+pill.addEventListener('pointerdown', (e) => {
+  arrastrando = true;
+  seMovio = false;
+  inicioX = e.clientX;
+  inicioY = e.clientY;
+  pill.setPointerCapture(e.pointerId);   // seguimos el dedo aunque salga del pill
+});
+
+pill.addEventListener('pointermove', (e) => {
+  if (!arrastrando) return;
+  const dx = e.clientX - inicioX;
+  const dy = e.clientY - inicioY;
+  if (Math.abs(dx) + Math.abs(dy) > 5) seMovio = true;
+  pill.style.setProperty('--dx', (baseX + dx) + 'px');
+  pill.style.setProperty('--dy', (baseY + dy) + 'px');
+});
+
+function soltar(e){
+  if (!arrastrando) return;
+  arrastrando = false;
+  baseX += e.clientX - inicioX;
+  baseY += e.clientY - inicioY;
+}
+pill.addEventListener('pointerup', soltar);
+pill.addEventListener('pointercancel', soltar);
+
+// Si hubo arrastre real, cancelamos el click fantasma sobre los botones
+pill.addEventListener('click', (e) => {
+  if (seMovio){
+    e.stopPropagation();
+    e.preventDefault();
+  }
+}, true);
+
+// Los botones son demostrativos: un pequeño feedback en el hint
+pill.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (seMovio) return;
+    hint.innerHTML = '✦ Pulsaste «<b>' + btn.getAttribute('aria-label') + '</b>» — sigue arrastrando el pill';
+  });
+});
+</script>
+</body>
+</html>
