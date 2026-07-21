@@ -148,28 +148,41 @@
     padding:0 14px;
 
     /* Fidelidad del material:
-       - fondo casi transparente (nunca opaco)
+       - fondo casi invisible: el vidrio real apenas tiñe, deja ver el contenido
        - borde claro fino
        - rim especular arriba (inset claro) + sombra interna abajo (inset oscuro)
        - sombra de elevación amplia */
-    background:rgba(255,255,255,.10);
-    border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.28);
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.45),
-      inset 0 -1px 1px rgba(0,0,0,.18),
-      0 10px 34px rgba(0,0,0,.45);
+      inset 0 1px 0 rgba(255,255,255,.5),
+      inset 0 -1px 1px rgba(0,0,0,.12),
+      0 10px 34px rgba(0,0,0,.35);
 
-    /* FALLBACK universal (Safari / Firefox): frosted glass clásico.
+    /* FALLBACK universal (Safari / Firefox): vidrio claro, no esmerilado.
+       Blur bajo para que el contenido se siga leyendo a través; la saturación
+       y el brightness dan el "pop" óptico del cristal.
        La refracción SVG se añade después como enhancement solo en Chromium. */
-    backdrop-filter:blur(10px) saturate(160%);
-    -webkit-backdrop-filter:blur(10px) saturate(160%);
+    backdrop-filter:blur(4px) saturate(180%) brightness(1.06);
+    -webkit-backdrop-filter:blur(4px) saturate(180%) brightness(1.06);
   }
   .pill:active{ cursor:grabbing; }
+
+  /* Lámina de brillo: gradiente sutil de luz arriba, como el reflejo
+     de una superficie curva de vidrio. No añade opacidad al centro. */
+  .pill::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,0) 45%);
+  }
 
   /* REFRACCIÓN — enhancement solo-Chromium (se activa desde JS).
      El filtro SVG deforma el backdrop; blur/saturate/brightness rematan el vidrio */
   .pill.refracta{
-    backdrop-filter:url(#lente) blur(2px) saturate(150%) brightness(1.04);
+    backdrop-filter:url(#lente) blur(1px) saturate(160%) brightness(1.05);
   }
 
   /* Botones del pill */
