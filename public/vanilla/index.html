@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid Glass — ejemplo vanilla</title>
+<link rel="stylesheet" href="liquid-glass.css">
+<style>
+  /* ---- Página de ejemplo (nada de esto es parte de la librería) ---- */
+  body{
+    margin:0;
+    min-height:200vh;
+    color:#fff;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height:1.6;
+    background:#0b0d16;
+  }
+  main{ max-width:680px; margin:0 auto; padding:80px 24px 40vh; }
+  h1{ font-size:2.2rem; margin:0 0 .4rem; }
+  .nota{ color:#9aa3bd; max-width:52ch; }
+  .tarjeta{
+    border-radius:22px; padding:24px 26px; margin:2rem 0; color:#fff;
+  }
+  .c1{ background:linear-gradient(135deg,#ff5e62,#d543a8); }
+  .c2{ background:linear-gradient(135deg,#38e4ff,#3b6cff); }
+  .c3{ background:linear-gradient(135deg,#c6f44d,#12b886); color:#062b1f; }
+  .lineas p{ margin:.15rem 0; color:#9aa3bd; font-size:.92rem; white-space:nowrap; overflow:hidden; }
+
+  /* El pill de ejemplo: la librería SOLO pide la clase .liquid-glass
+     y el atributo data-liquid-glass; el posicionamiento es tuyo */
+  #pill{
+    position:fixed;
+    left:50%; bottom:28px;
+    width:300px; height:60px;
+    transform:translate(calc(-50% + var(--dx, 0px)), var(--dy, 0px));
+    display:flex; align-items:center; justify-content:space-around;
+    touch-action:none; cursor:grab;
+    user-select:none; -webkit-user-select:none;
+    z-index:10;
+  }
+  #pill:active{ cursor:grabbing; }
+  #pill button{
+    appearance:none; border:0; background:transparent; color:#fff;
+    width:44px; height:44px; border-radius:50%; font-size:19px;
+    display:grid; place-items:center; cursor:pointer;
+    text-shadow:0 1px 2px rgba(0,0,0,.55), 0 0 8px rgba(0,0,0,.4);
+  }
+  #pill button:hover{ background:rgba(255,255,255,.18); }
+
+  /* Una tarjeta de vidrio estática, para ver que sirve en cualquier forma */
+  #panel{
+    position:fixed; right:20px; top:20px;
+    width:200px; padding:14px 16px;
+    border-radius:20px;
+    font-size:.85rem; z-index:10;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Liquid Glass en vanilla</h1>
+  <p class="nota">
+    Sin módulos, sin build, sin frameworks: un CSS, un script clásico y el
+    atributo <code>data-liquid-glass</code>. Arrastra el pill sobre el texto
+    (en Chrome/Edge de escritorio verás la refracción; en Safari/iOS, frosted).
+  </p>
+
+  <div class="tarjeta c1">
+    <strong>Tarjeta uno.</strong> Pasa el vidrio por el borde de esta tarjeta
+    y mira cómo la frontera de color se curva en el anillo del cristal.
+  </div>
+
+  <div class="lineas" aria-hidden="true">
+    <p>────────── línea de calibración ── pasa el pill por aquí ──────────</p>
+    <p>0123456789 · 0123456789 · 0123456789 · 0123456789 · 0123456789</p>
+    <p>||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||</p>
+    <p>abcdefghijklmnñopqrstuvwxyz abcdefghijklmnñopqrstuvwxyz</p>
+    <p>0123456789 · 0123456789 · 0123456789 · 0123456789 · 0123456789</p>
+    <p>────────── línea de calibración ── pasa el pill por aquí ──────────</p>
+  </div>
+
+  <div class="tarjeta c2">
+    <strong>Tarjeta dos.</strong> El centro del vidrio es plano: el texto
+    debajo se lee perfecto. Solo el borde dobla la luz, como una lente.
+  </div>
+
+  <div class="tarjeta c3">
+    <strong>Tarjeta tres.</strong> Sigue bajando y pasa el panel fijo de la
+    esquina por encima de los gradientes al hacer scroll.
+  </div>
+</main>
+
+<!-- Vidrio 1: pill arrastrable. Auto-init con calibre por defecto -->
+<div id="pill" class="liquid-glass" data-liquid-glass role="group" aria-label="Controles flotantes">
+  <button type="button" aria-label="Compartir">⇧</button>
+  <button type="button" aria-label="Cerrar">✕</button>
+  <button type="button" aria-label="Brújula">◎</button>
+</div>
+
+<!-- Vidrio 2: panel estático con calibre más fuerte vía data-atributos -->
+<div id="panel" class="liquid-glass" data-liquid-glass data-bisel="20" data-escala="50" data-croma="2">
+  Panel de vidrio estático.<br>Haz scroll y mira sus bordes.
+</div>
+
+<script src="liquid-glass.js" defer></script>
+<script defer>
+/* ---- Arrastre del pill (parte del EJEMPLO, no de la librería) ----
+   Pointer events con las lecciones aprendidas: captura diferida al
+   umbral (para no romper los clicks de los botones), solo botón
+   principal, y sin regenerar nada al mover. */
+document.addEventListener('DOMContentLoaded', function(){
+  var pill = document.getElementById('pill');
+  var arrastrando = false, id = null, seMovio = false;
+  var x0 = 0, y0 = 0, baseX = 0, baseY = 0;
+
+  pill.addEventListener('pointerdown', function(e){
+    if (e.button !== 0 || !e.isPrimary || arrastrando) return;
+    arrastrando = true; id = e.pointerId; seMovio = false;
+    x0 = e.clientX; y0 = e.clientY;
+  });
+  pill.addEventListener('pointermove', function(e){
+    if (!arrastrando || e.pointerId !== id) return;
+    var dx = e.clientX - x0, dy = e.clientY - y0;
+    if (!seMovio && Math.abs(dx) + Math.abs(dy) > 5){
+      seMovio = true;
+      pill.setPointerCapture(e.pointerId);   // capturar AQUÍ, no en pointerdown
+    }
+    if (seMovio){
+      pill.style.setProperty('--dx', (baseX + dx) + 'px');
+      pill.style.setProperty('--dy', (baseY + dy) + 'px');
+    }
+  });
+  function soltar(e){
+    if (!arrastrando || e.pointerId !== id) return;
+    arrastrando = false; id = null;
+    if (seMovio){ baseX += e.clientX - x0; baseY += e.clientY - y0; }
+  }
+  pill.addEventListener('pointerup', soltar);
+  pill.addEventListener('pointercancel', soltar);
+  pill.addEventListener('click', function(e){
+    if (seMovio){ e.stopPropagation(); e.preventDefault(); seMovio = false; }
+  }, true);
+});
+</script>
+</body>
+</html>

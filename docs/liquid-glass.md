@@ -96,3 +96,25 @@ En Vue/Svelte es igual: llamar en `onMounted`/`onMount`, destruir al desmontar.
 | Cualquier navegador de iOS (incl. Chrome/CriOS) | Fallback frosted — iOS es WebKit debajo |
 
 La demo completa con el pill arrastrable vive en `public/liquid-glass.html`.
+
+## Versión 100% vanilla (sin módulos ES)
+
+En `public/vanilla/` hay un paquete listo para copiar a cualquier proyecto
+sin build ni servidor: script clásico (funciona hasta abriendo el HTML con
+doble clic, `file://` incluido), CSS del material y auto-inicialización.
+
+```html
+<link rel="stylesheet" href="liquid-glass.css">
+<script src="liquid-glass.js" defer></script>
+
+<!-- cero JavaScript: se activa solo -->
+<div class="liquid-glass" data-liquid-glass></div>
+
+<!-- opciones por atributo -->
+<div class="liquid-glass" data-liquid-glass data-bisel="20" data-escala="50"></div>
+```
+
+La API global (`liquidGlass(el, opciones)`, `soportaRefraccion()`) es la
+misma que la del módulo ES; la instancia de cada elemento auto-inicializado
+queda en `el._liquidGlass`. `index.html` es un ejemplo completo con un pill
+arrastrable y un panel estático.

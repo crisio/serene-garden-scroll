@@ -1,0 +1,54 @@
+/* ============================================================
+   liquid-glass.css — material del vidrio
+   ------------------------------------------------------------
+   La clase .liquid-glass pone el "material" (tinte, borde, rim
+   especular). La refracción la añade liquid-glass.js por encima.
+
+   Reglas que respeta este CSS (no las rompas al personalizar):
+   - Fondo TRANSLÚCIDO: un fondo opaco tapa el efecto.
+   - Solo sombras inset: una sombra exterior en el mismo elemento
+     acaba dentro del snapshot del backdrop en Chromium y la lente
+     la magnifica como una mancha oscura. Si necesitas sombra de
+     elevación, ponla en un elemento hermano o contenedor.
+   ============================================================ */
+
+.liquid-glass{
+  /* tinte oscuro ligero: mantiene legible el contenido del vidrio
+     (iconos/texto blancos) incluso sobre fondos claros */
+  background: rgba(14, 17, 27, .28);
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 999px;      /* liquid-glass.js lee el radio computado */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .5),     /* rim especular arriba */
+    inset 0 -1px 1px rgba(0, 0, 0, .12);       /* asiento oscuro abajo */
+}
+
+/* Lámina de brillo: reflejo suave en la mitad superior, como una
+   superficie curva de vidrio. Requiere position en el elemento. */
+.liquid-glass{ position: relative; }
+.liquid-glass::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 40%);
+}
+
+/* Variante clara, para interfaces sobre fondos oscuros donde se
+   prefiera el vidrio blanco clásico */
+.liquid-glass--claro{
+  background: rgba(255, 255, 255, .08);
+}
+
+/* Accesibilidad: si el usuario pide menos transparencia, el vidrio
+   se vuelve sólido y se apagan los filtros (el !important gana a los
+   estilos inline que pone el JS) */
+@media (prefers-reduced-transparency: reduce){
+  .liquid-glass{
+    background: rgba(40, 44, 60, .96);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .liquid-glass::before{ display: none; }
+}
